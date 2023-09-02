@@ -23,12 +23,12 @@ use work.global_package.all;
 entity flash_model is
 port (
   -- Normal SST25VG010A connections
-  i_sck     : in    std_logic;    -- SPI Clock (20MHz max)
-  i_ce_n    : in    std_logic;    -- Chip Enable
-  i_wp_n    : in    std_logic;    -- Write Protect
-  i_hold_n  : in    std_logic;    -- Hold
-  i_si      : in    std_logic;    -- SPI In
-  o_so      : inout std_logic;     -- SPI Out
+  i_sck     : in  std_logic;    -- SPI Clock (20MHz max)
+  i_ce_n    : in  std_logic;    -- Chip Enable
+  i_wp_n    : in  std_logic;    -- Write Protect
+  i_hold_n  : in  std_logic;    -- Hold
+  i_si      : in  std_logic;    -- SPI In
+  o_so      : out std_logic;    -- SPI Out
   -- Additional I/O for simulation/model purposes
   i_mem     : in  t_array_slv64(16383 downto 0)
 );
