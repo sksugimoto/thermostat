@@ -18,7 +18,7 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 library work;
-use work.flash_model_pkg.all;
+use work.global_package.all;
 
 entity flash_model is
 port (

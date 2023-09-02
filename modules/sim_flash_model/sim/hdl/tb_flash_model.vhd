@@ -13,7 +13,7 @@ use std.env.stop;
 use std.textio.all;
 
 library work;
-use work.flash_model_pkg.all;
+use work.global_package.all;
 
 entity tb_flash_model is
 end entity tb_flash_model;
