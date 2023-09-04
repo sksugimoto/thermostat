@@ -22,9 +22,11 @@ add wave -expand -group "UUT" -radix binary   sim:/testbench/sh_0/o_spi_cs_n
 add wave -expand -group "UUT" -radix binary   sim:/testbench/sh_0/o_spi_si
 add wave -expand -group "UUT" -radix binary   sim:/testbench/sh_0/i_spi_so
 add wave -expand -group "UUT" -radix binary   sim:/testbench/sh_0/s_spi_data_requested
+add wave -expand -group "UUT" -radix binary   sim:/testbench/sh_0/s_spi_data_ready
 add wave -expand -group "UUT"                 sim:/testbench/sh_0/s_spi_state
 add wave -expand -group "UUT"                 sim:/testbench/sh_0/s_spi_nstate
 add wave -expand -group "UUT" -radix unsigned sim:/testbench/sh_0/n_counter
+add wave -expand -group "UUT" -radix unsigned sim:/testbench/sh_0/n_spi_clk_cnt
 
 # Add Thermometer Model signals
 add wave -expand -group "Thermometer Model" -radix hex  sim:/testbench/therm0/s_air_temperature
