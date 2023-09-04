@@ -143,7 +143,7 @@ begin
     wait until(rising_edge(s_sck));
     flash_read_word(24x"0", 48);
     wait until(rising_edge(s_sck));
-    flash_read_word(24x"1FFFC",16);
+    flash_read_word(24x"1FFFC", 16);
     wait for 500 us;
     if(s_success) then
       report "Test completed successfully!";

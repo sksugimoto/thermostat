@@ -81,11 +81,15 @@ begin
   end generate;
 
   -- o_so control
-  process(s_spi_mem_nstate, s_addr, n_read_counter) is
+  process(i_ce_n, s_spi_mem_nstate, s_addr, n_read_counter) is
   begin
     o_so <= 'Z';
-    if (s_spi_mem_nstate = DATA_OUT) then
-      o_so  <= s_flash_array(to_integer(unsigned(s_addr)))(n_read_counter);
+    if(i_ce_n = '0') then
+      if (s_spi_mem_nstate = DATA_OUT) then
+        o_so <= s_flash_array(to_integer(unsigned(s_addr)))(n_read_counter);
+      else
+        o_so <= '0';
+      end if;
     end if;
   end process;
 
