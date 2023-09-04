@@ -167,7 +167,6 @@ begin
   end process;
 
   -- s_spi_mem_nstate control
-  -- process(i_ce_n, n_cmd_counter, n_addr_counter) is -- , s_cmd, s_addr) is
   process(i_ce_n, n_cmd_clk_counter) is
   begin
     case s_spi_mem_state is

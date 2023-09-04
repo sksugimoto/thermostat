@@ -201,14 +201,6 @@ begin
       end if;
     end if;
   end process;
-  -- process(i_reset_n, s_spi_nstate) is
-  -- begin
-  --   if(i_reset_n = '0') then
-  --     s_spi_xfer_done <= '0';
-  --   else
-  --     s_spi_xfer_done <= '1' when s_spi_nstate = SPI_DATA_VALID else '0';
-  --   end if;
-  -- end process;
 
   -- n_spi_clk_cnt control
   process(i_reset_n, i_spi_clk) is
