@@ -153,10 +153,10 @@ module testbench;
     repeat (10) @(posedge r_sys_clk);
     
     // Run test
-    // req_flash_data(24'h5, 12'd16);
-    // req_flash_data(24'h0, 12'd24);
-    // req_flash_data(24'h1FFFC, 12'd16);
-    req_flash_data(24'h0, 12'd2112);
+    req_flash_data(24'h5, 12'd16);
+    req_flash_data(24'h0, 12'd24);
+    req_flash_data(24'h1FFFC, 12'd16);
+    // req_flash_data(24'h0, 12'd2112);
 
     // Wait 10 clock cycles before stopping test
     repeat (10) @(posedge r_sys_clk);

@@ -9,6 +9,7 @@
 module testbench;
   // Control signals
   reg         r_sys_clk;
+  reg         r_reset_n;
   reg         r_data_request;
   wire[15:0]  w_data;
   wire        w_data_valid;
@@ -27,6 +28,7 @@ module testbench;
   // SPI Handler module
   spi_handler_thermometer sh_0 (
     .i_clk(r_sys_clk),
+    .i_reset_n(r_reset_n),
     .i_data_request(r_data_request),
     .o_data(w_data),
     .o_data_valid(w_data_valid),
@@ -59,13 +61,14 @@ module testbench;
 
   // Run test suite
   initial begin
+    r_reset_n       <= 1'b1;
     r_data_request  <= 1'b0;
     r_heat          <= 1'b0;
     r_cool          <= 1'b0;
     r_amb_hc        <= 1'b0;
 
-    // Wait 0.5 sec
-    #500000
+    // Wait 0.15 sec for first temperature to load
+    #150000
 
     // Request Thermometer data
     read_spi_therm;

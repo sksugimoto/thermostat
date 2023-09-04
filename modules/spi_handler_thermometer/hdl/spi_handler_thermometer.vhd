@@ -12,16 +12,17 @@ use ieee.std_logic_unsigned.all;
 entity spi_handler_thermometer is
 port (
   -- System clock
-  i_clk               : in  std_logic;  -- 20KHz clock
+  i_clk           : in  std_logic;  -- 20KHz clock
+  i_reset_n       : in  std_logic;
   -- Control signals
-  i_data_request      : in  std_logic;
-  o_data              : out std_logic_vector(15 downto 0);
-  o_data_valid        : out std_logic;
+  i_data_request  : in  std_logic;
+  o_data          : out std_logic_vector(15 downto 0);
+  o_data_valid    : out std_logic;
   -- SPI Port
-  i_spi_clk           : in  std_logic;  -- 10KHz clock
-  o_spi_cs_n          : out std_logic;
-  o_spi_si            : out std_logic;
-  i_spi_so            : in  std_logic
+  i_spi_clk       : in  std_logic;  -- 10KHz clock
+  o_spi_cs_n      : out std_logic;
+  o_spi_si        : out std_logic;
+  i_spi_so        : in  std_logic
 );
 end entity spi_handler_thermometer;
 
@@ -52,67 +53,98 @@ begin
   --              SPI SIGNAL HANDLING              --
   ---------------------------------------------------
   -- Drive SPI SI low
-  o_spi_si  <= '0';
+  process(i_reset_n, s_spi_nstate) is
+  begin
+    if(i_reset_n = '0') then
+      o_spi_si  <= 'Z';
+    else
+      o_spi_si <= 'Z' when s_spi_nstate = IDLE else '0';
+    end if;
+  end process;
 
   -- s_data_request control
-  process(i_spi_clk) is
+  process(i_reset_n, i_spi_clk) is
   begin
-    if(rising_edge(i_spi_clk)) then
-      s_spi_data_requested  <= i_data_request;
+    if(i_reset_n = '0') then
+      s_spi_data_requested <= '0';
+    else
+      if(rising_edge(i_spi_clk)) then
+        s_spi_data_requested  <= i_data_request;
+      end if;
     end if;
   end process;
 
   -- SPI CS_n control
-  process(s_spi_nstate, n_counter) is
+  process(i_reset_n, s_spi_nstate, n_counter) is
   begin
-    s_spi_cs_n  <= '1';
-    if(s_spi_nstate = SPI_TRANSFER or (s_spi_nstate = IDLE and s_spi_state = SPI_TRANSFER)) then
-      s_spi_cs_n  <= '0';
+    if(i_reset_n = '0') then
+      s_spi_cs_n  <= '1';
+    else
+      s_spi_cs_n  <= '1';
+      if(s_spi_nstate = SPI_TRANSFER or (s_spi_nstate = IDLE and s_spi_state = SPI_TRANSFER)) then
+        s_spi_cs_n  <= '0';
+      end if;
     end if;
   end process;
   o_spi_cs_n  <= s_spi_cs_n;
   
-  -- Read data from SPI SO
-  process(i_spi_clk) is
+  -- Read data from SPI SO / o_data control
+  process(i_reset_n, i_spi_clk) is
   begin
-    if (rising_edge(i_spi_clk)) then
-      if (s_spi_state = SPI_TRANSFER or (s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER)) then
-        o_data(15-n_counter)  <= i_spi_so;
+    if(i_reset_n = '0') then
+      o_data <= (others => '0');
+    else
+      if (rising_edge(i_spi_clk)) then
+        if (s_spi_state = SPI_TRANSFER or (s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER)) then
+          o_data(15-n_counter)  <= i_spi_so;
+        end if;
       end if;
     end if;
   end process;
 
   -- n_counter control
-  process(i_spi_clk) is
+  process(i_reset_n, i_spi_clk) is
   begin
-    if(rising_edge(i_spi_clk)) then
-      if(s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER) then
-        n_counter <= n_counter + 1;
-      elsif(s_spi_state = SPI_TRANSFER) then
-        n_counter <= n_counter + 1 when s_spi_nstate = SPI_TRANSFER else 0;
-      else
-        n_counter <= 0;
+    if(i_reset_n = '0') then
+      n_counter <= 0;
+    else
+      if(rising_edge(i_spi_clk)) then
+        if(s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER) then
+          n_counter <= n_counter + 1;
+        elsif(s_spi_state = SPI_TRANSFER) then
+          n_counter <= n_counter + 1 when s_spi_nstate = SPI_TRANSFER else 0;
+        else
+          n_counter <= 0;
+        end if;
       end if;
     end if;
   end process;
 
   -- SPI Next state control
   -- TODO: Handle unexpected behavior.
-  process(s_spi_data_requested, n_counter) is
+  process(i_reset_n, s_spi_data_requested, n_counter) is
   begin
-    case s_spi_state is
-      when IDLE =>
-        s_spi_nstate <= SPI_TRANSFER when rising_edge(s_spi_data_requested) else IDLE;
-      when SPI_TRANSFER =>
-        s_spi_nstate  <= IDLE when n_counter = 15 else SPI_TRANSFER;
-    end case;
+    if(i_reset_n = '0') then
+      s_spi_nstate <= IDLE;
+    else
+      case s_spi_state is
+        when IDLE =>
+          s_spi_nstate <= SPI_TRANSFER when rising_edge(s_spi_data_requested) else IDLE;
+        when SPI_TRANSFER =>
+          s_spi_nstate <= IDLE when n_counter = 15 else SPI_TRANSFER;
+      end case;
+    end if;
   end process;
 
   -- SPI State control
-  process(i_spi_clk) is
+  process(i_reset_n, i_spi_clk) is
   begin
-    if(rising_edge(i_spi_clk)) then
-      s_spi_state <= s_spi_nstate;
+    if(i_reset_n = '0') then
+      s_spi_state <= IDLE;
+    else
+      if(rising_edge(i_spi_clk)) then
+        s_spi_state <= s_spi_nstate;
+      end if;
     end if;
   end process;
 
@@ -120,27 +152,39 @@ begin
   --        HANDLER SIGNAL HANDLING        --
   -------------------------------------------
   -- o_data_valid control
-  process(s_sys_nstate) is
+  process(i_reset_n, s_sys_nstate) is
   begin
-    o_data_valid  <= '1' when s_sys_nstate = DATA_RETRIVED else '0';
+    if(i_reset_n = '0' ) then
+      o_data_valid <= '0';
+    else
+      o_data_valid  <= '1' when s_sys_nstate = DATA_RETRIVED else '0';
+    end if;
   end process;
   -- System Next State Control
-  process(i_data_request, s_spi_state) is
+  process(i_reset_n, i_data_request, s_spi_state) is
   begin
-    case s_sys_state is
-      when IDLE =>
-        s_sys_nstate  <= SPI_TRANSFER_WAIT when rising_edge(i_data_request) else IDLE;
-      when SPI_TRANSFER_WAIT =>
-        s_sys_nstate  <= DATA_RETRIVED when s_spi_state = IDLE else SPI_TRANSFER_WAIT;
-      when DATA_RETRIVED =>
-        s_sys_nstate  <= IDLE when falling_edge(i_data_request) else DATA_RETRIVED;
-    end case;
+    if(i_reset_n = '0') then
+      s_sys_nstate <= IDLE;
+    else
+      case s_sys_state is
+        when IDLE =>
+          s_sys_nstate  <= SPI_TRANSFER_WAIT when rising_edge(i_data_request) else IDLE;
+        when SPI_TRANSFER_WAIT =>
+          s_sys_nstate  <= DATA_RETRIVED when s_spi_state = IDLE else SPI_TRANSFER_WAIT;
+        when DATA_RETRIVED =>
+          s_sys_nstate  <= IDLE when falling_edge(i_data_request) else DATA_RETRIVED;
+      end case;
+    end if;
   end process;
   -- System State Control
-  process(i_clk) is
+  process(i_reset_n, i_clk) is
   begin
-    if(rising_edge(i_clk)) then
-      s_sys_state <= s_sys_nstate;
+    if(i_reset_n = '0') then
+      s_sys_state <= IDLE;
+    else
+      if(rising_edge(i_clk)) then
+        s_sys_state <= s_sys_nstate;
+      end if;
     end if;
   end process;
 
