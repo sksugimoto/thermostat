@@ -74,7 +74,7 @@ begin
     -- s_flash_array(8)       <= i_mem(1)(7 downto 0);
     -- s_flash_array(9)       <= i_mem(1)(15 downto 8);
     -- ...
-    -- s_flash_array(2047)    <= i_mem(255)(63 downto 56);  -- End of reserved memory for thermostat programming
+    -- s_flash_array(2111)    <= i_mem(263)(63 downto 56);  -- End of reserved memory for thermostat programming
     -- ...
     -- s_flash_array(131070)  <= i_mem(16383)(55 downto 48);
     -- s_flash_array(131071)  <= i_mem(16383)(63 downto 56);

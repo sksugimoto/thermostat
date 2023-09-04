@@ -15,7 +15,7 @@ module testbench;
   reg[11:0]     r_read_num;
   wire          w_data_ready;
   wire          w_command_error;
-  wire[16383:0] w_data; // Originally t_array_slv8(2047 downto 0)
+  wire[32767:0] w_data; // Originally t_array_slv8(2047 downto 0)
 
   // Flash model control signals
   reg             r_wp_n;
@@ -35,14 +35,16 @@ module testbench;
   integer fh;
   integer n_addr_ptr;
   integer n_num_reads;
-  reg [63:0]    r_mem_array [16383:0];
-  reg [16383:0] r_handler_data;
-  wire[7:0]     w_handler_data_array [2047:0];
-  reg [7:0]     r_expt_data_array[2047:0];
-  reg [16383:0] r_expt_data;
+  reg [63:0]    r_mem_array [16383:0];          // Test Flash data
+  reg [32767:0] r_handler_data;                 // Data produced by handler, 1-D array
+  wire[7:0]     w_handler_data_array [4095:0];  // Data produced by handler, 2-D array
+  reg [7:0]     r_expt_data_array[4095:0];      // Data expected from handler, 2-D array
+  reg [32767:0] r_expt_data;                    // Data expected from handler, 1-D array
   reg           r_data_mismatch;
   
-
+  // -------------------------------------------
+  // --         MODULE INSTANTIATIONS         --
+  // -------------------------------------------
   // SPI Handler module uut
   wrapper_spi_handler_flash UUT (
     // Generics
@@ -77,6 +79,9 @@ module testbench;
     .i_mem(w_mem)
   );
 
+  // --------------------------------------------
+  // --            CLOCK GENERATION            --
+  // --------------------------------------------
   // System clock generation (20KHz)
   initial r_sys_clk <= 1'b1;
   always #25 r_sys_clk <= ~r_sys_clk;
@@ -85,21 +90,27 @@ module testbench;
   initial r_spi_clk <= 1'b1;
   always #50 r_spi_clk <= ~r_spi_clk;
 
+  // --------------------------------------------
+  // --         DATA ARRAY CONVERSIONS         --
+  // --------------------------------------------
   // Convert r_mem_array 2d-array to 1d-wire w_mem.
   generate
     for(g_i = 0; g_i < 16384; g_i = g_i + 1) begin
       assign w_mem[(g_i*64+63):(g_i*64)] = r_mem_array[g_i];
     end
   endgenerate
-
+  // Convert r_handler_data 1d-array to 2d w_handler_data_array
   generate
-    for(g_i = 0; g_i < 2048; g_i = g_i + 1) begin
+    for(g_i = 0; g_i < 4096; g_i = g_i + 1) begin
       assign w_handler_data_array[g_i] = r_handler_data[(g_i*8+7):(g_i*8)];
     end
   endgenerate
 
+  // --------------------------------------------
+  // --        EXPECTED DATA GENERATION        --
+  // --------------------------------------------
   always @(*) begin
-    for(i = 0; i < 2048; i = i + 1) begin
+    for(i = 0; i < 4096; i = i + 1) begin
       if(i < n_num_reads) begin
         r_expt_data_array[i] <= (n_addr_ptr + i) < 131072 ? r_mem_array[(n_addr_ptr+i)/8][(((n_addr_ptr+i) % 8)*8) +: 8] : r_mem_array[(n_addr_ptr+i-131072)/8][(((n_addr_ptr+i-131072) % 8)*8) +: 8];
         r_expt_data[(8*i) +: 8] <= (n_addr_ptr + i) < 131072 ? r_mem_array[(n_addr_ptr+i)/8][(((n_addr_ptr+i) % 8)*8) +: 8] : r_mem_array[(n_addr_ptr+i-131072)/8][(((n_addr_ptr+i-131072) % 8)*8) +: 8];
@@ -110,7 +121,9 @@ module testbench;
     end
   end
 
-  // Run test suite
+  // --------------------------------------------
+  // --             TEST PROCEDURE             --
+  // --------------------------------------------
   initial begin
     // Read test file
     fh = $fopen("test_flash.dat", "r");
@@ -140,9 +153,10 @@ module testbench;
     repeat (10) @(posedge r_sys_clk);
     
     // Run test
-    req_flash_data(24'h5, 12'd16);
-    req_flash_data(24'h0, 12'd24);
-    req_flash_data(24'h1FFFC, 12'd16);
+    // req_flash_data(24'h5, 12'd16);
+    // req_flash_data(24'h0, 12'd24);
+    // req_flash_data(24'h1FFFC, 12'd16);
+    req_flash_data(24'h0, 12'd2112);
 
     // Wait 10 clock cycles before stopping test
     repeat (10) @(posedge r_sys_clk);
@@ -169,9 +183,6 @@ module testbench;
     // Save data obtained from flash handler
     @(posedge r_sys_clk) r_handler_data <= w_data;
     r_data_request  <= 1'b0;
-    // if(r_expt_data != r_handler_data) begin
-    //   r_data_mismatch <= 1'b1;
-    // end
     wait(w_data_ready == 1'b0);
     if(r_expt_data != r_handler_data) begin
       r_data_mismatch <= 1'b1;

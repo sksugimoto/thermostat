@@ -23,10 +23,10 @@ port (
   -- Control Signals
   i_data_request  : in  std_logic;  -- Only goes high when SPI bus is available
   i_read_addr     : in  std_logic_vector(23 downto 0);
-  i_read_num      : in  integer range 0 to 2048;
+  i_read_num      : in  integer range 0 to 4096;
   o_data_ready    : out std_logic;
   o_command_error : out std_logic;
-  o_data          : out t_array_slv8(2047 downto 0);
+  o_data          : out t_array_slv8(4095 downto 0);
   -- SPI Port
   i_spi_clk       : in  std_logic;  -- 10KHz clock
   o_spi_cs_n      : out std_logic;
@@ -40,7 +40,7 @@ architecture spi_handler_flash of spi_handler_flash is
   constant c_flash_read_cmd : std_logic_vector(7 downto 0) := 8x"03";
   -- Module I/O signals
   signal s_read_addr      : std_logic_vector(23 downto 0);
-  signal n_read_num       : integer range 0 to 2048;
+  signal n_read_num       : integer range 0 to 4096;
   -- Handle State Machine (runs on system clock)
   type t_sys_state is (
     SYS_IDLE,
@@ -59,9 +59,9 @@ architecture spi_handler_flash of spi_handler_flash is
   signal s_spi_si         : std_logic := 'Z';
   signal n_spi_cmd_cnt    : integer range 0 to 7;
   signal n_spi_addr_cnt   : integer range 0 to 23;
-  signal s_spi_data       : t_array_slv8(2047 downto 0) := (others => (others => '0'));
+  signal s_spi_data       : t_array_slv8(4095 downto 0) := (others => (others => '0'));
   signal n_spi_bit_cnt    : integer range 0 to 7;
-  signal n_spi_word_cnt   : integer range 0 to 2047;
+  signal n_spi_word_cnt   : integer range 0 to 4095;
   signal s_spi_xfer_done  : std_logic := '0';
   -- SPI State Machine states (runs on SPI clock)
   type t_spi_state is (

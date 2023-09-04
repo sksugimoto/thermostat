@@ -14,12 +14,12 @@ add wave -expand -group "Testbench" -radix hex      sim:/testbench/req_flash_dat
 add wave -expand -group "Testbench" -radix unsigned sim:/testbench/req_flash_data/ti_flash_read_num
 add wave -expand -group "Testbench" -radix hex      sim:/testbench/n_addr_ptr
 add wave -expand -group "Testbench" -radix unsigned sim:/testbench/n_num_reads
-for {set i 0} {$i < 24} {incr i} {
+for {set i 0} {$i < 25} {incr i} {
   add wave -expand -group "Testbench" -group "r_expt_data_array"    -radix hex  sim:/testbench/r_expt_data_array([expr {24-$i}])
   add wave -expand -group "Testbench" -group "w_handler_data_array" -radix hex  sim:/testbench/w_handler_data_array([expr {24-$i}])
 }
-add wave -expand -group "Testbench" -radix hex      sim:/testbench/r_expt_data
-add wave -expand -group "Testbench" -radix hex      sim:/testbench/r_handler_data
+# add wave -expand -group "Testbench" -radix hex      sim:/testbench/r_expt_data
+# add wave -expand -group "Testbench" -radix hex      sim:/testbench/r_handler_data
 add wave -expand -group "Testbench" -radix binary   sim:/testbench/r_data_mismatch
 
 # Add UUT signals

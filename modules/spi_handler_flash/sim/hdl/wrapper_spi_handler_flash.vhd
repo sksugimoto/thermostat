@@ -26,7 +26,7 @@ port (
   i_read_num          : in  std_logic_vector(11 downto 0);
   o_data_ready        : out std_logic;
   o_command_error     : out std_logic;
-  o_data              : out std_logic_vector(16383 downto 0); -- out t_array_slv8(2047 downto 0);
+  o_data              : out std_logic_vector(32767 downto 0); -- out t_array_slv8(4095 downto 0);
   -- SPI Port
   i_spi_clk           : in  std_logic;  -- 10KHz clock
   o_spi_cs_n          : out std_logic;
@@ -36,7 +36,7 @@ port (
 end entity wrapper_spi_handler_flash;
   
 architecture wrapper_spi_handler_flash of wrapper_spi_handler_flash is
-  signal s_data : t_array_slv8(2047 downto 0);
+  signal s_data : t_array_slv8(4095 downto 0);
 begin
   spi_handler_flash : entity work.spi_handler_flash
   generic map (
@@ -61,7 +61,7 @@ begin
   );
 
   -- Convert s_data t_array_slv8 to o_data slv.
-  gen_o_data : for i in 0 to 2047 generate
+  gen_o_data : for i in 0 to 4095 generate
     o_data((i*8+7) downto (i*8)) <= s_data(i);
   end generate;
 end architecture;
