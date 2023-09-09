@@ -77,13 +77,17 @@ begin
   end process;
 
   -- n_counter increment
-  process(i_spi_clk) is
+  process(i_spi_cs_n, i_spi_clk) is
   begin
-    if (rising_edge(i_spi_clk)) then
-      if (s_spi_nstate = IDLE) then
-        n_counter <= 0;
-      elsif (s_spi_nstate = SPI_TRANSFER) then
-        n_counter <= n_counter + 1;
+    if(i_spi_cs_n = '1') then
+      n_counter <= 0;
+    else
+      if (rising_edge(i_spi_clk)) then
+        if (s_spi_nstate = IDLE) then
+          n_counter <= 0;
+        elsif (s_spi_nstate = SPI_TRANSFER) then
+          n_counter <= n_counter + 1;
+        end if;
       end if;
     end if;
   end process;
@@ -115,25 +119,33 @@ begin
   -- Next State control
   process (i_spi_cs_n, n_counter) is
   begin
-    case s_spi_state is
-      when IDLE =>
-        s_spi_nstate  <= IDLE;
-        if(falling_edge(i_spi_cs_n)) then
-          s_spi_nstate  <= SPI_TRANSFER;
-        end if;
-      when SPI_TRANSFER =>
-        s_spi_nstate  <= SPI_TRANSFER;
-        if (n_counter = 15 or i_spi_cs_n = '1') then
+    if(i_spi_cs_n = '1') then
+      s_spi_nstate <= IDLE;
+    else
+      case s_spi_state is
+        when IDLE =>
           s_spi_nstate  <= IDLE;
-        end if;
-    end case;
+          if(falling_edge(i_spi_cs_n)) then
+            s_spi_nstate  <= SPI_TRANSFER;
+          end if;
+        when SPI_TRANSFER =>
+          s_spi_nstate  <= SPI_TRANSFER;
+          if (n_counter = 15 or i_spi_cs_n = '1') then
+            s_spi_nstate  <= IDLE;
+          end if;
+      end case;
+    end if;
   end process;
 
   -- State control
-  process(i_spi_clk) is
+  process(i_spi_cs_n, i_spi_clk) is
   begin
-    if (rising_edge(i_spi_clk)) then
-      s_spi_state <= s_spi_nstate;
+    if(i_spi_cs_n = '1') then
+      s_spi_state <= IDLE;
+    else
+      if (rising_edge(i_spi_clk)) then
+        s_spi_state <= s_spi_nstate;
+      end if;
     end if;
   end process;
 end architecture;

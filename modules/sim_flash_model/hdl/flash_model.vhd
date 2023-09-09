@@ -94,75 +94,99 @@ begin
   end process;
 
   -- n_cmd_counter control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      n_cmd_counter <= n_cmd_counter + 1 when s_spi_mem_nstate = GET_CMD and n_cmd_counter /= 7 else 0;
+    if(i_ce_n = '1') then
+      n_cmd_counter <= 0;
+    else
+      if(rising_edge(i_sck)) then
+        n_cmd_counter <= n_cmd_counter + 1 when s_spi_mem_nstate = GET_CMD and n_cmd_counter /= 7 else 0;
+      end if;
     end if;
   end process;
 
   -- s_cmd control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      -- Read in command during GET_CMD state
-      if(s_spi_mem_nstate = GET_CMD) then
-        s_cmd(n_cmd_counter)  <= i_si;
-      elsif(i_ce_n = '1') then
-        s_cmd <= (others => '0');
+    if(i_ce_n = '1') then
+      s_cmd <= (others => '0');
+    else
+      if(rising_edge(i_sck)) then
+        -- Read in command during GET_CMD state
+        if(s_spi_mem_nstate = GET_CMD) then
+          s_cmd(n_cmd_counter)  <= i_si;
+        elsif(i_ce_n = '1') then
+          s_cmd <= (others => '0');
+        end if;
       end if;
     end if;
   end process;
 
   -- n_addr_counter control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      n_addr_counter <= n_addr_counter + 1 when s_spi_mem_nstate = GET_ADDR and n_addr_counter /= 23 else 0;
+    if(i_ce_n = '1') then
+      n_addr_counter <= 0;
+    else
+      if(rising_edge(i_sck)) then
+        n_addr_counter <= n_addr_counter + 1 when s_spi_mem_nstate = GET_ADDR and n_addr_counter /= 23 else 0;
+      end if;
     end if;
   end process;
 
   -- s_addr control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      if(s_spi_mem_nstate = GET_ADDR) then -- Read initial address from SPI In
-        s_addr(n_addr_counter) <= i_si;
-      elsif(s_spi_mem_nstate = DATA_OUT) then -- Increment address when reading data
-        if n_read_counter = 7 then  -- Address should increment once every 8 SPI transactions
-          -- Address pointer wraps
-          s_addr <= 24x"0" when s_addr = 24x"1FFFF" else s_addr + 24x"1";
+    if(i_ce_n = '1') then
+      s_addr <= (others => '0');
+    else
+      if(rising_edge(i_sck)) then
+        if(s_spi_mem_nstate = GET_ADDR) then -- Read initial address from SPI In
+          s_addr(n_addr_counter) <= i_si;
+        elsif(s_spi_mem_nstate = DATA_OUT) then -- Increment address when reading data
+          if n_read_counter = 7 then  -- Address should increment once every 8 SPI transactions
+            -- Address pointer wraps
+            s_addr <= 24x"0" when s_addr = 24x"1FFFF" else s_addr + 24x"1";
+          end if;
+        else
+          s_addr <= 24x"0";
         end if;
-      else
-        s_addr <= 24x"0";
       end if;
     end if;
   end process;
 
   -- n_read_counter control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      if(s_spi_mem_nstate = DATA_OUT) then
-        n_read_counter <= 0 when n_read_counter = 7 else n_read_counter + 1;
-      else
-        n_read_counter <= 0;
+    if(i_ce_n = '1') then
+      n_read_counter <= 0;
+    else
+      if(rising_edge(i_sck)) then
+        if(s_spi_mem_nstate = DATA_OUT) then
+          n_read_counter <= 0 when n_read_counter = 7 else n_read_counter + 1;
+        else
+          n_read_counter <= 0;
+        end if;
       end if;
     end if;
   end process;
 
   -- n_cmd_clk_counter control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      case s_spi_mem_nstate is
-        when GET_CMD =>
-          n_cmd_clk_counter <= 0 when s_spi_mem_state = IDLE else n_cmd_clk_counter + 1;
-        when GET_ADDR =>
-          n_cmd_clk_counter <= 0 when s_spi_mem_state = GET_CMD else n_cmd_clk_counter + 1;
-        when others =>
-          n_cmd_clk_counter <= 0;
-      end case;
+    if(i_ce_n = '1') then
+      n_cmd_clk_counter <= 0;
+    else
+      if(rising_edge(i_sck)) then
+        case s_spi_mem_nstate is
+          when GET_CMD =>
+            n_cmd_clk_counter <= 0 when s_spi_mem_state = IDLE else n_cmd_clk_counter + 1;
+          when GET_ADDR =>
+            n_cmd_clk_counter <= 0 when s_spi_mem_state = GET_CMD else n_cmd_clk_counter + 1;
+          when others =>
+            n_cmd_clk_counter <= 0;
+        end case;
+      end if;
     end if;
   end process;
 
@@ -196,10 +220,14 @@ begin
   end process;
 
   -- s_spi_mem_state control
-  process(i_sck) is
+  process(i_ce_n, i_sck) is
   begin
-    if(rising_edge(i_sck)) then
-      s_spi_mem_state <= s_spi_mem_nstate;
+    if(i_ce_n = '1') then
+      s_spi_mem_state <= IDLE;
+    else
+      if(rising_edge(i_sck)) then
+        s_spi_mem_state <= s_spi_mem_nstate;
+      end if;
     end if;
   end process;
 end architecture;
