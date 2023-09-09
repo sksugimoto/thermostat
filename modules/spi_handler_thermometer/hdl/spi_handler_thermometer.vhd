@@ -1,8 +1,8 @@
--- spi_handler.vhd
+-- spi_handler_thermometer.vhd
 -- Author: Samuel Sugimoto
 -- Date: 
 
--- SPI handler module for 16-bit SPI transfer
+-- SPI handler module for acquiring temperature data from thermometer.
 -- Part of synthesizable design
 
 library ieee;
@@ -61,7 +61,7 @@ begin
     if(i_reset_n = '0') then
       o_spi_si  <= 'Z';
     else
-      o_spi_si <= 'Z' when s_spi_nstate = IDLE else '0';
+      o_spi_si <= 'Z' when s_spi_nstate /= SPI_TRANSFER else '0';
     end if;
   end process;
 
@@ -96,9 +96,14 @@ begin
       o_data <= (others => '0');
     else
       if (rising_edge(i_spi_clk)) then
-        if (s_spi_state = SPI_TRANSFER or (s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER)) then
-          o_data(15-n_counter)  <= i_spi_so;
-        end if;
+        case s_spi_nstate is
+          when IDLE =>
+            o_data  <= (others => '0');
+          when SPI_TRANSFER =>
+            o_data(15-n_counter) <= i_spi_so;
+          when SPI_DATA_READY =>
+            o_data <= o_data;
+        end case;
       end if;
     end if;
   end process;
@@ -110,7 +115,11 @@ begin
       n_spi_clk_cnt <= 0;
     else
       if(rising_edge(i_spi_clk)) then
-        n_spi_clk_cnt <= n_spi_clk_cnt + 1 when s_spi_nstate = SPI_TRANSFER else 0;
+        if(s_spi_nstate = SPI_TRANSFER) then
+          n_spi_clk_cnt <= 0 when s_spi_state = IDLE else n_spi_clk_cnt + 1;
+        else
+          n_spi_clk_cnt <= 0;
+        end if;
       end if;
     end if;
   end process;
@@ -121,13 +130,7 @@ begin
       n_counter <= 0;
     else
       if(rising_edge(i_spi_clk)) then
-        if(s_spi_state = IDLE and s_spi_nstate = SPI_TRANSFER) then
-          n_counter <= n_counter + 1;
-        elsif(s_spi_state = SPI_TRANSFER) then
-          n_counter <= n_counter + 1 when s_spi_nstate = SPI_TRANSFER else 0;
-        else
-          n_counter <= 0;
-        end if;
+        n_counter <= n_counter + 1 when s_spi_nstate = SPI_TRANSFER and n_counter /= 15 else 0;
       end if;
     end if;
   end process;
