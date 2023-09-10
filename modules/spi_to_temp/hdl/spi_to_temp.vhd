@@ -14,7 +14,7 @@ port (
   -- Control signals
   i_use_f     : in  std_logic;
   -- Data In/Out
-  i_spi_data  : in  std_logic_vector(15 downto 0);
+  i_spi_data  : in  std_logic_vector(9 downto 0);
   o_temp_data : out ufixed(6 downto -2)
 );
 end entity spi_to_temp;
@@ -49,7 +49,7 @@ architecture spi_to_temp of spi_to_temp is
   
 begin
   -- Temperature in C
-  s_c_temp  <= to_ufixed(i_spi_data(13 downto 5), 6, -2);
+  s_c_temp  <= to_ufixed(i_spi_data(8 downto 0), 6, -2);
   -- C to F Temperature conversion
   s_f_mult  <= s_c_temp * c_f_mult;
   s_f_temp  <= (s_f_mult + c_f_nq + c_f_offset);

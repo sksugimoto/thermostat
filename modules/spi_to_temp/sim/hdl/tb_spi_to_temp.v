@@ -10,7 +10,7 @@ module testbench;
   // UUT Signals
   reg         r_use_f;
   reg[9:0]    r_spi_data;
-  wire[15:0]  w_spi_data;
+  // wire[15:0]  w_spi_data;
   wire[6:-2]  w_temp_data;
   wire[6:0]   w_temp_num;
   wire[1:0]   w_temp_dec;
@@ -19,11 +19,11 @@ module testbench;
   // UUT
   spi_to_temp s2t (
     .i_use_f(r_use_f),
-    .i_spi_data(w_spi_data),
+    .i_spi_data(r_spi_data),
     .o_temp_data(w_temp_data)
   );
 
-  assign w_spi_data = {1'b0, r_spi_data, {5{r_spi_data[0]}}};
+  // assign w_spi_data = {1'b0, r_spi_data, {5{r_spi_data[0]}}};
   assign w_temp_num = w_temp_data[6:0];
   assign w_temp_dec = w_temp_data[-1:-2];
 
