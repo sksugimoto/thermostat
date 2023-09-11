@@ -46,9 +46,12 @@ module testbench;
   // --         MODULE INSTANTIATIONS         --
   // -------------------------------------------
   // SPI Handler module uut
-  wrapper_spi_handler_flash UUT (
+  wrapper_spi_handler_flash #(
+    .g_addr_max_width(8'd17)
+  ) 
+  UUT (
     // Generics
-    .i_g_addr_max_width(8'd17),
+    
     // System clock/reset
     .i_sys_clk(r_sys_clk),
     .i_reset_n(r_reset_n),

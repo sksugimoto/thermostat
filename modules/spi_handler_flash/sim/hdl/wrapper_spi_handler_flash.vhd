@@ -14,9 +14,10 @@ library work;
 use work.global_package.all;
 
 entity wrapper_spi_handler_flash is
+generic (
+  g_addr_max_width  : integer := 17
+);
 port (
-  -- Generics
-  i_g_addr_max_width  : in  std_logic_vector(7 downto 0) := 8d"17";
   -- System clock/reset
   i_sys_clk           : in  std_logic;      -- 20KHz clock
   i_reset_n           : in  std_logic;
@@ -40,7 +41,7 @@ architecture wrapper_spi_handler_flash of wrapper_spi_handler_flash is
 begin
   spi_handler_flash : entity work.spi_handler_flash
   generic map (
-    g_addr_max_width => to_integer(unsigned(i_g_addr_max_width))
+    g_addr_max_width => g_addr_max_width
   )
   port map (
     -- System clock/reset
