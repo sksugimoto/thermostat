@@ -36,9 +36,9 @@ architecture spi_to_temp of spi_to_temp is
   -- 11|1001|1001 -> 1+0.5+0.25+0.03125+0.015625+0.001953125 = 1.798828125 ~= 1.8
   constant c_f_mult   : ufixed(0 downto -9) := 10x"399";
   -- 6|5432|1012
-  -- 0|1000|0000 -> 32.0
+  -- 0|1000|0000 -> 2^5 = 32.0
   constant  c_f_offset  : ufixed(5 downto 0) := 6x"20";
-  constant  c_f_nq      : ufixed(0 downto -3) := 4x"1"; -- nearest quarter degree (after truncation)
+  constant  c_f_nq      : ufixed(0 downto -3) := 4x"1"; -- for rounding to nearest quarter degree (after truncation)
   signal    s_c_temp    : ufixed(6 downto -2);
   -- Farenheit Conversion
   -- s_f_mult
