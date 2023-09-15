@@ -50,8 +50,6 @@ module testbench;
     .g_addr_max_width(8'd17)
   ) 
   UUT (
-    // Generics
-    
     // System clock/reset
     .i_sys_clk(r_sys_clk),
     .i_reset_n(r_reset_n),

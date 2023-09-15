@@ -4,6 +4,7 @@
 
 -- Emulates a TI TMP125 SPI thermometer in continuous conversion mode
 -- Only emulates positive degrees celsius
+-- Only needed for simulation, does not need to be synthesizable
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -12,7 +13,7 @@ use ieee.std_logic_unsigned.all;
 entity thermometer_model is
 port (
     -- Normal TI TMP125 connections
-    i_spi_clk   : in  std_logic;  -- 10MHz Max SPI clock, set to 1KHz
+    i_spi_clk   : in  std_logic;  -- 10MHz Max SPI clock, set to 10KHz
     i_spi_cs_n  : in  std_logic;
     i_spi_si    : in  std_logic;
     o_spi_so    : out std_logic;
