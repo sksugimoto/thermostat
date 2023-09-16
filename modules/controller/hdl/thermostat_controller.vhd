@@ -79,9 +79,6 @@ architecture thermostat_controller of thermostat_controller is
   signal s_cool_off         : std_logic;
   signal s_heat_off         : std_logic;
   
-  
-  -- CMD_CONFIRM state holds thermostat in "idle" for 5 seconds
-  -- to allow for "command settling" before engaging HVAC.
   type t_thermostat_state is(
     IDLE,
     HEAT_ON,
@@ -103,7 +100,7 @@ begin
     else
       if(rising_edge(i_clk)) then
         if(i_man_stc.heat_on = '0' and i_man_stc.cool_on = '0' and i_prog_stc.heat_on = '0' and i_prog_stc.cool_on = '0') then -- System idle
-          s_target_temp <= i_temperature(6 downto -1);
+          s_target_temp <= resize(i_temperature, s_target_temp'high, s_target_temp'low);
         else  -- System active
           if(i_man_stc.heat_on = '1' or i_man_stc.cool_on = '1') then  -- run manual or override
             if(i_use_f = '1') then
@@ -113,7 +110,7 @@ begin
               else
                 -- to_ufixed(unsigned(i_man_stc.trgt_f_ofst, 6), 5, 0) is ufixed(5 downto 0)
                 -- c_f_lbound is ufixed(3 downto 0), therefore sum is max(5, 3) + 1 downto min(0, 0) => ufixed(6 downto 0)
-                s_target_temp <= (c_f_lbound + to_ufixed(i_man_stc.trgt_f_ofst, 5, 0)) & '0';
+                s_target_temp <= resize((c_f_lbound + to_ufixed(i_man_stc.trgt_f_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
               end if;
             else
               -- When in Celsius mode, target temperature has a range of 10C-37.5C
@@ -132,7 +129,7 @@ begin
               if(i_prog_stc.trgt_f_ofst > 49) then
                 s_target_temp <= 7x"63" & '0';
               else
-                s_target_temp <= (c_f_lbound + to_ufixed(i_prog_stc.trgt_f_ofst, 5, 0)) & '0';
+                s_target_temp <= resize((c_f_lbound + to_ufixed(i_prog_stc.trgt_f_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
               end if;
             else
               if(i_prog_stc.trgt_c_ofst > 55) then
@@ -231,34 +228,10 @@ begin
               else
                 s_therm_nstate <= IDLE;
               end if;
-              -- if(i_use_f = '1') then
-              --   if(i_temperature > (s_target_temp + c_f_a_buf)) then
-              --     s_therm_nstate <= COOL_ON;
-              --   elsif(i_temperature < (s_target_temp - c_f_a_buf)) then
-              --     s_therm_nstate <= HEAT_ON;
-              --   else
-              --     s_therm_nstate <= IDLE;
-              --   end if;
-              -- else
-              --   if(i_temperature > (s_target_temp + c_c_a_buf)) then
-              --     s_therm_nstate <= COOL_ON;
-              --   elsif(i_temperature < (s_target_temp - c_c_a_buf)) then
-              --     s_therm_nstate <= HEAT_ON;
-              --   else
-              --     s_therm_nstate <= IDLE;
-              --   end if;
-              -- end if;
             elsif(s_mode = c_cool_mode) then  -- Normal Heating and cooling
               s_therm_nstate <= COOL_ON when s_cool_on = '1' else IDLE;
-              -- if(i_use_f = '1') then
-              --   s_therm_nstate <= COOL_ON when i_temperature > (s_target_tem-- Only needed for simulation, does not need to be synthesizable
             elsif(s_mode = c_heat_mode) then
               s_therm_nstate <= HEAT_ON when s_heat_on = '1' else IDLE;
-              -- if(i_use_f = '1') then
-              --   s_therm_nstate <= HEAT_ON when i_temperature < (s_target_temp - c_f_buffer) else IDLE;
-              -- else
-              --   s_therm_nstate <= HEAT_ON when i_temperature < (s_target_temp - c_c_buffer) else IDLE;
-              -- end if;
             else
               s_therm_nstate <= IDLE;
             end if;
@@ -274,11 +247,6 @@ begin
             else
               s_therm_nstate <= CYCLE_DELAY when s_heat_off = '1' else HEAT_ON;
             end if;
-            -- if(i_use_f = '1') then
-            --   s_therm_nstate <= CYCLE_DELAY when i_temperature > (s_target_temp + c_f_buffer) else HEAT_ON;
-            -- else
-            --   s_therm_nstate <= CYCLE_DELAY when i_temperature > (s_target_temp + c_c_buffer) else HEAT_ON;
-            -- end if;
           end if;
         when COOL_ON =>
           if(i_sys_pwr_n = '1') then
@@ -289,11 +257,6 @@ begin
             else
               s_therm_nstate <= CYCLE_DELAY when s_cool_off = '1' else COOL_ON;
             end if;
-            -- if(i_use_f = '1') then
-            --   s_therm_nstate <= CYCLE_DELAY when i_temperature < (s_target_temp - c_f_buffer) else COOL_ON;
-            -- else
-            --   s_therm_nstate <= CYCLE_DELAY when i_temperature < (s_target_temp - c_c_buffer) else COOL_ON;
-            -- end if;
           end if;
         when CYCLE_DELAY =>
           s_therm_nstate <= IDLE when n_delay_counter = (c_sc_delay - 1) else CYCLE_DELAY;
