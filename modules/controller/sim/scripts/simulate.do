@@ -27,6 +27,8 @@ add wave -expand -group "UUT" -radix binary   {sim:/testbench/UUT/controller/s_t
 add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/i_prog_stc
 add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/i_man_stc
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_mode
+add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_auto_range
+add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_buffer
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_auto_cool_on
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_auto_heat_on
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_auto_cool_off

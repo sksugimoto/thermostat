@@ -204,14 +204,14 @@ begin
   s_buffer      <= c_f_buffer when i_use_f = '1' else c_c_buffer;
 
   -- Temperature comparision tests
-  s_auto_cool_on  <= '1' when (resize(i_temperature, 6, -2) > resize(s_target_temp + s_auto_range + s_buffer, 6, -2)) else '0';
-  s_auto_heat_on  <= '1' when (resize(i_temperature, 6, -2) < resize(s_target_temp - s_auto_range - s_buffer, 6, -2)) else '0';
-  s_auto_cool_off <= '1' when (resize(i_temperature, 6, -2) < resize(s_target_temp + s_auto_range - s_buffer, 6, -2)) else '0';
-  s_auto_heat_off <= '1' when (resize(i_temperature, 6, -2) > resize(s_target_temp - s_auto_range + s_buffer, 6, -2)) else '0';
-  s_cool_on   <= '1' when (resize(i_temperature, 6, -2) > resize(s_target_temp + s_buffer, 6, -2)) else '0';
-  s_heat_on   <= '1' when (resize(i_temperature, 6, -2) < resize(s_target_temp - s_buffer, 6, -2)) else '0';
-  s_cool_off  <= '1' when (resize(i_temperature, 6, -2) < resize(s_target_temp - s_buffer, 6, -2)) else '0';
-  s_heat_off  <= '1' when (resize(i_temperature, 6, -2) > resize(s_target_temp + s_buffer, 6, -2)) else '0';
+  s_auto_cool_on  <= '1' when (i_temperature >= resize(s_target_temp + s_auto_range + s_buffer, 6, -2)) else '0';
+  s_auto_heat_on  <= '1' when (i_temperature <= resize(s_target_temp - s_auto_range - s_buffer, 6, -2)) else '0';
+  s_auto_cool_off <= '1' when (i_temperature <= resize(s_target_temp + s_auto_range - s_buffer, 6, -2)) else '0';
+  s_auto_heat_off <= '1' when (i_temperature >= resize(s_target_temp - s_auto_range + s_buffer, 6, -2)) else '0';
+  s_cool_on   <= '1' when (i_temperature >= resize(s_target_temp + s_buffer, 6, -2)) else '0';
+  s_heat_on   <= '1' when (i_temperature <= resize(s_target_temp - s_buffer, 6, -2)) else '0';
+  s_cool_off  <= '1' when (i_temperature <= resize(s_target_temp - s_buffer, 6, -2)) else '0';
+  s_heat_off  <= '1' when (i_temperature >= resize(s_target_temp + s_buffer, 6, -2)) else '0';
 
   -- s_therm_nstate control
   therm_nstate_ctrl : process(i_reset_n, s_therm_state, i_sys_pwr_n, s_mode, s_auto_cool_on, s_auto_heat_on, s_auto_cool_off,
