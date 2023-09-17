@@ -152,8 +152,10 @@ module testbench;
     test_program_cool;
     test_program_auto;
     test_manual;
+    $display("Testing System off...");
+    r_sys_pwn_n <= 1'b1;
 
-    repeat(10) @(posedge r_clk);
+    repeat(500000) @(posedge r_clk);
     $stop;
   end
 

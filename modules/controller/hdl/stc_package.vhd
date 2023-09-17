@@ -37,6 +37,13 @@ package stc_package is
 end package stc_package;
 
 package body stc_package is
+  constant c_stc_idle : t_stc := (
+    heat_on     => '0',
+    cool_on     => '0',
+    force_fan   => '0',
+    trgt_c_ofst => 0,
+    trgt_f_ofst => 0
+  );
   -- Converts stc to a 32-bit wide slv.
   function stc_to_slv (
     i_stc_t : in t_stc
