@@ -14,8 +14,10 @@ add wave -expand -group "Testbench" -radix unsigned sim:/testbench/w_minute
 # Add UUT signals
 add wave -expand -group "UUT" -expand -group "Seconds" -radix unsigned  sim:/testbench/UUT/n_clk_counter
 add wave -expand -group "UUT" -expand -group "Seconds" -radix unsigned  sim:/testbench/UUT/n_second
-add wave -expand -group "UUT" -expand -group "Minutes" -radix unsigned  sim:/testbench/UUT/n_min_cntr
-add wave -expand -group "UUT" -expand -group "Minutes" -radix binary    sim:/testbench/UUT/s_incr_min_hld
+add wave -expand -group "UUT" -group "Minutes" -radix unsigned  sim:/testbench/UUT/n_min_cntr
+add wave -expand -group "UUT" -group "Minutes" -radix binary    sim:/testbench/UUT/s_incr_min_hld
+add wave -expand -group "UUT" -expand -group "Hours" -radix unsigned  sim:/testbench/UUT/n_hr_cntr
+add wave -expand -group "UUT" -expand -group "Hours" -radix binary    sim:/testbench/UUT/s_incr_hr_hld
 
 configure wave -signalnamewidth 1
 

@@ -66,19 +66,21 @@ module testbench;
 
     // Let time run for 5 "seconds", then begin setting time
     repeat(p_clk_freq*5) @(posedge r_clk);
-    r_set_time_n <= 1'b0;
-    // Wait for 5 "seconds" then start incrementing minutes
-    repeat(p_clk_freq*5) @(posedge r_clk);
-    r_incr_min_n <= 1'b0;
-    repeat(p_clk_freq*20) @(posedge r_clk);
-    r_set_time_n <= 1'b1;
-    repeat(p_clk_freq*100) @(posedge r_clk);
-    r_incr_min_n <= 1'b1;
-    r_set_time_n <= 1'b0;
-    repeat(p_clk_freq*10) @(posedge r_clk);
-    r_set_time_n <= 1'b1;
-    repeat(p_clk_freq*100) @(posedge r_clk);
-
+    r_set_time_n  <= 1'b0;
+    r_incr_day_n  <= 1'b0;
+    r_incr_hr_n   <= 1'b0;
+    r_incr_min_n  <= 1'b0;
+    wait(w_day == 7'b1000000); // Saturday
+    r_incr_day_n <= 1'b1;
+    wait(w_hour == 5'h10);    // 16 Hours (4PM)
+    r_incr_hr_n <= 1'b1;
+    wait(w_minute == 6'h25);  // 37 minutes (Saturday, 4:37PM)
+    r_incr_min_n  <= 1'b1;
+    r_set_time_n  <= 1'b1;
+    wait(w_day == 7'b1);
+    wait(w_hour == 5'h11);
+    wait(w_minute == 6'h1);   // Wait for Sunday, 5:01 PM
+    repeat(25*p_clk_freq) @(posedge r_clk);
     $stop;
   end
 
