@@ -11,15 +11,15 @@ use ieee.numeric_std.all;
 
 entity time_keeper is
 generic (
-  -- Set to different value for simulation, probably 1Hz
+  -- Set to different value for simulation
   g_clk_freq  : integer := 20000;
   g_btn_init  : integer := 20000;
   g_btn_hold  : integer := 5000
 );
 port (
   -- Clock and Reset
-  i_clk       : in  std_logic;  -- 20KHz clock
-  i_reset_n   : in  std_logic;
+  i_clk         : in  std_logic;  -- 20KHz clock
+  i_reset_n     : in  std_logic;
 
   -- User Interface
   i_set_time_n  : in  std_logic;  -- Active Low
@@ -28,9 +28,9 @@ port (
   i_incr_min_n  : in  std_logic;  -- Active Low
 
   -- Time
-  o_day       : out std_logic_vector(6 downto 0); -- One-hot reference to day
-  o_hour      : out std_logic_vector(4 downto 0);
-  o_minute    : out std_logic_vector(5 downto 0)
+  o_day         : out std_logic_vector(6 downto 0); -- One-hot reference to day
+  o_hour        : out std_logic_vector(4 downto 0);
+  o_minute      : out std_logic_vector(5 downto 0)
 );
 end entity time_keeper;
 
