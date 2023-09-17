@@ -254,7 +254,7 @@ begin
   end process;
 
   -- n_day_cntr control
-  process(i_reset_n, i_set_time_n, i_incr_day_n, i_clk) is
+  process(i_reset_n, i_clk) is
   begin
     if(i_reset_n = '0') then
       n_day_cntr <= 0;
@@ -274,7 +274,7 @@ begin
   end process;
 
   -- s_incr_day_hld control
-  process(i_reset_n, i_set_time_n, i_incr_day_n, i_clk) is
+  process(i_reset_n, i_clk) is
   begin
     if(i_reset_n = '0') then
       s_incr_day_hld <= '0';
