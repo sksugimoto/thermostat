@@ -30,7 +30,8 @@ port (
   -- Time
   o_day         : out std_logic_vector(6 downto 0); -- One-hot reference to day
   o_hour        : out std_logic_vector(4 downto 0);
-  o_minute      : out std_logic_vector(5 downto 0)
+  o_minute      : out std_logic_vector(5 downto 0);
+  o_second      : out std_logic_vector(5 downto 0)
 );
 end entity time_keeper;
 
@@ -302,5 +303,8 @@ begin
 
   -- o_minute control
   o_minute <= std_logic_vector(to_unsigned(n_minute, o_minute'length));
+
+  -- o_second control
+  o_second <= std_logic_vector(to_unsigned(n_second, o_second'length));
 
 end architecture;

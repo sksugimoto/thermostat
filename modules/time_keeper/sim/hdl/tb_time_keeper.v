@@ -22,6 +22,7 @@ module testbench;
   wire[6:0] w_day;
   wire[4:0] w_hour;
   wire[5:0] w_minute;
+  wire[5:0] w_second;
 
   time_keeper # (
     // Set to different value for simulation
@@ -41,9 +42,10 @@ module testbench;
     .i_incr_min_n(r_incr_min_n),  // : in  std_logic;  -- Active Low
 
     // Time
-    .o_day(w_day),      // : out std_logic_vector(6 downto 0); -- One-hot reference to day
-    .o_hour(w_hour),    // : out std_logic_vector(4 downto 0);
-    .o_minute(w_minute) // : out std_logic_vector(5 downto 0);
+    .o_day(w_day),        // : out std_logic_vector(6 downto 0); -- One-hot reference to day
+    .o_hour(w_hour),      // : out std_logic_vector(4 downto 0);
+    .o_minute(w_minute),  // : out std_logic_vector(5 downto 0);
+    .o_second(w_second)
   );
 
   // --------------------------------------------

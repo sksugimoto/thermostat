@@ -10,6 +10,7 @@ add wave -expand -group "Testbench" -radix binary   sim:/testbench/r_incr_min_n
 add wave -expand -group "Testbench" -radix binary   sim:/testbench/w_day
 add wave -expand -group "Testbench" -radix unsigned sim:/testbench/w_hour
 add wave -expand -group "Testbench" -radix unsigned sim:/testbench/w_minute
+add wave -expand -group "Testbench" -radix unsigned sim:/testbench/w_second
 
 # Add UUT signals
 add wave -expand -group "UUT" -expand -group "Seconds" -radix unsigned  sim:/testbench/UUT/n_clk_counter
