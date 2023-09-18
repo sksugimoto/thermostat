@@ -39,7 +39,6 @@ port (
   i_t_up_n      : in  std_logic;  -- Push Button, Active Low
   -- Controller Interface
   o_stc         : out t_stc := c_stc_idle   -- Should only update after user controls have been idle for X seconds
-
 );
 end entity usr_ctrl_ovride;
 
@@ -56,10 +55,8 @@ architecture usr_ctrl_ovride of usr_ctrl_ovride is
   signal  n_c_offset          : integer range 0 to 55;
   signal  s_prog_stc_d1       : t_stc := c_stc_idle;
   signal  s_prog_stc_changed  : std_logic := '0';
-
-  signal s_btn_hold           : std_logic := '0';
-  signal n_btn_counter        : integer range 0 to (g_btn_init - 1) := 0;
-
+  signal  s_btn_hold          : std_logic := '0';
+  signal  n_btn_counter       : integer range 0 to (g_btn_init - 1) := 0;
 
   type t_manual_state is (
     IDLE,
@@ -94,6 +91,7 @@ begin
       end if;
     end if;
   end process;
+
   -- n_f_offset control
   process(i_reset_n, s_manual_nstate, s_temp, i_run_prog_n, i_prog_stc, i_use_f, i_t_up_n, i_t_down_n, i_clk) is
   begin
@@ -244,9 +242,15 @@ begin
         case s_manual_nstate is
           when IDLE =>
             s_stc <= c_stc_idle;
-          when others =>
+          when MANUAL_MODE =>
             s_stc.heat_on <= '1' when ((i_heat_cool_n(2) = '0') or (i_heat_cool_n(0) = '0')) else '0';
             s_stc.cool_on <= '1' when ((i_heat_cool_n(1) = '0') or (i_heat_cool_n(0) = '0')) else '0';
+            s_stc.force_fan <= '0'; -- Handled at top level
+            s_stc.trgt_c_ofst <= n_c_offset;
+            s_stc.trgt_f_ofst <= n_f_offset;
+          when OVERRIDE_MODE =>
+            s_stc.heat_on <= i_prog_stc.heat_on;
+            s_stc.cool_on <= i_prog_stc.cool_on;
             s_stc.force_fan <= '0'; -- Handled at top level
             s_stc.trgt_c_ofst <= n_c_offset;
             s_stc.trgt_f_ofst <= n_f_offset;
@@ -318,16 +322,21 @@ begin
     end if;
   end process;
   
-  process(i_reset_n, i_sys_pwr_n, s_stc_settled) is
+  process(i_reset_n, i_sys_pwr_n, s_manual_nstate, s_stc_settled) is
   begin
     if(i_reset_n = '0') then
       o_stc <= c_stc_idle;
     else
-      if(i_sys_pwr_n = '0') then
-        o_stc <= s_stc when s_stc_settled = '1' else o_stc;
-      else
+      if(s_manual_nstate = IDLE) then
         o_stc <= c_stc_idle;
+      else
+        o_stc <= s_stc when s_stc_settled = '1' else o_stc;
       end if;
+      -- if(i_sys_pwr_n = '0') then
+      --   o_stc <= s_stc when s_stc_settled = '1' else o_stc;
+      -- else
+      --   o_stc <= c_stc_idle;
+      -- end if;
     end if;
   end process;
 

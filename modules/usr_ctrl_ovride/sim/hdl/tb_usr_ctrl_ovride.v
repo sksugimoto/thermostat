@@ -77,7 +77,7 @@ module testbench;
     r_use_f       <= 1'b1;
     r_sys_pwr_n   <= 1'b1;  // System off
     r_run_prog_n  <= 1'b1;  // Manual Mode
-    r_heat_cool_n <= 3'b1;  // Auto mode
+    r_heat_cool_n <= 3'h6;  // Auto mode
     r_t_down_n    <= 1'b1;
     r_t_up_n      <= 1'b1;
 
@@ -105,12 +105,14 @@ module testbench;
     r_t_up_n <= 1'b1;
     repeat(p_clk_freq*2) @(posedge r_clk);
     r_t_down_n <= 1'b1;
+    r_heat_cool_n <= 3'h5;  // Set to cool
 
-    // Let time run for 2 "seconds"
+    // Let time run for 2 "seconds", then set temperature in C
     repeat(p_clk_freq*2) @(posedge r_clk);
     r_use_f <= 1'b0;
+    r_temp  <= 9'h54;
     
-    // Let time run for 10 "seconds", then set temperature in C
+    // Let time run for 10 "seconds"
     repeat(p_clk_freq*10) @(posedge r_clk);
     for(j = 0; j < 4; j = j + 1) begin
       @(posedge r_clk) r_t_up_n <= 1'b0;
@@ -127,8 +129,27 @@ module testbench;
       @(posedge r_clk) r_t_up_n <= 1'b0;
       @(posedge r_clk) r_t_up_n <= 1'b1;
     end
+    // Let time run for 10 "seconds", then turn system on
+    repeat(p_clk_freq*10) @(posedge r_clk);
+    r_sys_pwr_n <= 1'b0;
+    // Let time run for 10 "seconds", then switch to program mode
+    repeat(p_clk_freq*10) @(posedge r_clk);
+    r_run_prog_n  <= 1'b0;
+    r_prog_stc    <= p_stc_heat;
+    // Let time run for 10 "seconds", then switch to push buttons for override mode
+    repeat(p_clk_freq*10) @(posedge r_clk);
+    r_t_up_n <= 1'b0;
+    repeat(p_clk_freq*2) @(posedge r_clk);
+    r_t_up_n <= 1'b1;
+
+    // Let time run for 10 "seconds", then switch program stc
+    repeat(p_clk_freq*10) @(posedge r_clk);
+    r_prog_stc <= p_stc_auto;
+
     // Let time run for 10 "seconds"
     repeat(p_clk_freq*10) @(posedge r_clk);
+
+    // Turn system on, then set to 
     $stop;
   end
 endmodule
