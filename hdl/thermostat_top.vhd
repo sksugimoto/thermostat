@@ -71,14 +71,17 @@ architecture thermostat_top of thermostat_top is
   -- Time Keper Signals
   signal s_time_day       : std_logic_vector(6 downto 0); -- One-hot reference to day
   signal s_time_hour      : std_logic_vector(4 downto 0);
-  signal s_time_minute    : std_logic_vector(5 downto 0)
+  signal s_time_minute    : std_logic_vector(5 downto 0);
+  signal s_time_second    : std_logic_vector(5 downto 0);
 
   -- SPI handler signals
   signal s_read_program   : std_logic;
   signal s_program_data   : t_array_slv64(263 downto 0);
+  signal s_sh_prgm_data   : t_array_slv64(263 downto 0);
   signal s_program_ready  : std_logic;
   signal s_read_therm     : std_logic;
-  signal s_temperature_c  : std_logic_vector(9 downto 0);
+  signal s_sh_temperature : std_logic_vector(9 downto 0);
+  signal s_temp_slv       : std_logic_vector(9 downto 0);
   signal s_therm_ready    : std_logic;
   signal s_spi_clk        : std_logic;
   signal s_spi_cs_n       : std_logic_vector(1 downto 0);
@@ -120,32 +123,27 @@ begin
     o_white_heat  => o_white_heat
   );
 
-  -- Time Keeper
-  time_keeper : entity work.time_keeper
-  generic map (
-    -- Set to different value for simulation
-    g_clk_freq  => g_time_clk_freq,
-    g_btn_init  => g_time_btn_init,
-    g_btn_hold  => g_time_btn_hold
-  );
-  port (
-    -- Clock and Reset
-    i_clk         => i_clk_20KHz,
-    i_reset_n     => i_reset_n,
-
-    -- User Interface
-    i_set_time_n  => i_set_time_n,
-    i_incr_day_n  => i_incr_day_n,
-    i_incr_hr_n   => i_incr_hr_n,
-    i_incr_min_n  => i_incr_min_n,
-
-    -- Time
-    o_day         => s_time_day,
-    o_hour        => s_time_hour,
-    o_minute      => s_time_minute
-  );
-
   -- Scheduler
+
+  -- SPI Data Handler
+  spi_data_handler : entity work.spi_data_handler
+  port map (
+    i_clk             => i_clk_20KHz,     -- : in  std_logic;
+    i_reset_n         => i_reset_n,       -- : in  std_logic;
+    i_sys_pwr_n       => i_sys_on_n,      -- : in  std_logic;
+    i_reprogram_n     => i_reprogram_n,   -- : in  std_logic;
+    i_time_second     => s_time_second,   -- : in  std_logic_vector(5 downto 0);
+    -- Program data signals
+    o_program_req     => s_read_program,  -- : out std_logic;
+    i_program_rdy     => s_program_ready, -- : in  std_logic;
+    i_sh_prog_data    => s_sh_prgm_data,  -- : in  t_array_slv64(263 downto 0);
+    o_last_prog_data  => s_program_data,  -- : out t_array_slv64(263 downto 0);
+    -- Temperature data signals
+    o_temp_req        => s_read_therm,      -- : out std_logic;
+    i_temp_rdy        => s_therm_ready,     -- : in  std_logic;
+    i_sh_temp_data    => s_sh_temperature,  -- : in  std_logic_vector(9 downto 0);
+    o_last_temp_data  => s_temp_slv         -- : out std_logic_vector(9 downto 0)
+  );
 
   -- SPI Handler
   spi_handler : entity work.spi_handler
@@ -155,11 +153,11 @@ begin
     i_reset_n         => i_reset_n,
     -- Programming Request Controls
     i_read_program    => s_read_program,
-    o_program_data    => s_program_data,
+    o_program_data    => s_sh_prgm_data,
     o_program_ready   => s_program_ready,
     -- Temperatrue Request Controls
     i_read_therm      => s_read_therm,
-    o_temperature     => s_temperature_c,
+    o_temperature     => s_sh_temperature, -- : out std_logic_vector(9 downto 0);
     o_therm_ready     => s_therm_ready,
     -- SPI Port
     i_spi_disconnect  => not i_reprogram_n,
@@ -178,7 +176,7 @@ begin
     -- Control signals
     i_use_f     => not i_use_f_n,
     -- Data In/Out
-    i_spi_data  => s_temperature_c,
+    i_spi_data  => s_temp_slv,
     o_temp_data => s_temperature
   );
 
@@ -208,6 +206,30 @@ begin
     i_t_up_n      => i_temp_up_n,
     -- Controller Interface
     o_stc         => s_man_stc
+  );
+
+  -- Time Keeper
+  time_keeper : entity work.time_keeper
+  generic map (
+    -- Set to different value for simulation
+    g_clk_freq  => g_time_clk_freq,
+    g_btn_init  => g_time_btn_init,
+    g_btn_hold  => g_time_btn_hold
+  );
+  port (
+    -- Clock and Reset
+    i_clk         => i_clk_20KHz,
+    i_reset_n     => i_reset_n,
+    -- User Interface
+    i_set_time_n  => i_set_time_n,
+    i_incr_day_n  => i_incr_day_n,
+    i_incr_hr_n   => i_incr_hr_n,
+    i_incr_min_n  => i_incr_min_n,
+    -- Time
+    o_day         => s_time_day,
+    o_hour        => s_time_hour,
+    o_minute      => s_time_minute,
+    o_second      => s_time_second
   );
 
   -- 14 Segment Displays Controller
