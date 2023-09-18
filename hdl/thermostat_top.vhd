@@ -13,11 +13,12 @@ use work.stc_package.all;
 
 entity thermostat_top is 
 generic (
-  g_controller_sc_delay_time  : integer := 12000000; -- Short Cycle Delay
-  g_time_clk_freq             : integer := 20000;
-  g_time_btn_init             : integer := 20000;
-  g_time_btn_hold             : integer := 5000
-)
+  g_controller_sc_delay_time  : integer := 12000000;  -- Short Cycle Delay, 10 Minutes
+  g_time_clk_freq             : integer := 20000;     -- 20KHz
+  g_time_btn_init             : integer := 20000;     -- 1 second
+  g_time_btn_hold             : integer := 5000;      -- 0.25 seconds
+  g_user_ui_idle_time         : integer := 100000     -- 5 seconds
+);
 port (
   -- Clock and Reset
   i_clk_20KHz   : in  std_logic;  -- Clock crystal
@@ -33,6 +34,8 @@ port (
   i_incr_day_n  : in  std_logic;                    -- Push button, active low
   i_incr_hr_n   : in  std_logic;                    -- Push button, active low
   i_incr_min_n  : in  std_logic;                    -- Push button, active low
+  i_temp_up_n   : in  std_logic;                    -- Push button, active low
+  i_temp_down_n : in  std_logic;                    -- Push button, active low
 
   -- 3-Wire Thermostat Control (4-wire with 24V power source)
   o_green_fan   : out std_logic;  -- Active high
@@ -177,6 +180,34 @@ begin
     -- Data In/Out
     i_spi_data  => s_temperature_c,
     o_temp_data => s_temperature
+  );
+
+  user_control : entity work.usr_ctrl_ovride
+  generic map (
+    -- # of clock cycles elapsed after last user input before o_stc is updated
+    -- Set to 5 seconds for deployment (20,000*5 = 100,000 cycles).
+    g_ui_idle_time  => g_user_ui_idle_time,
+    -- Set to different value for simulation
+    g_clk_freq  => g_time_clk_freq,
+    g_btn_init  => g_time_btn_init,
+    g_btn_hold  => g_time_btn_hold
+  );
+  port map (
+    -- Clock and Reset
+    i_clk         => i_clk_20KHz,
+    i_reset_n     => i_reset_n,
+    -- Scheduler STC Input
+    i_prog_stc    => s_prog_stc,
+    i_temp        => s_temperature,
+    -- User Interface
+    i_use_f       => not i_use_f_n,
+    i_sys_pwr_n   => i_sys_on_n,
+    i_run_prog_n  => i_run_prog_n,
+    i_heat_cool_n => i_heat_cool_n,
+    i_t_down_n    => i_temp_down_n,
+    i_t_up_n      => i_temp_up_n,
+    -- Controller Interface
+    o_stc         => s_man_stc
   );
 
   -- 14 Segment Displays Controller
