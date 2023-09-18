@@ -7,6 +7,7 @@
 `timescale 1us/1us
 
 module testbench;
+  parameter p_clk_freq = 10000;
   // UUT Signals
   reg   r_spi_clk;
   reg   r_spi_cs_n;
@@ -22,7 +23,10 @@ module testbench;
   integer i;
 
   // Thermoter Module
-  thermometer_model therm0 (
+  thermometer_model # (
+    .g_spi_clk_freq(p_clk_freq)
+  )
+  therm0 (
     .i_spi_clk(r_spi_clk),
     .i_spi_cs_n(r_spi_cs_n),
     .i_spi_si(r_spi_si),
@@ -34,9 +38,9 @@ module testbench;
 
   assign w_conv_temp = r_spi_in[14:5];
 
-  // SPI Clock Generation (1KHz), SPI clock 10MHz max
+  // SPI Clock Generation (10KHz), SPI clock 10MHz max
   initial r_spi_clk <= 1'b1;
-  always #500 r_spi_clk <= ~r_spi_clk;
+  always #50 r_spi_clk <= ~r_spi_clk;
 
   // Run test suite
   initial begin
@@ -46,13 +50,14 @@ module testbench;
     r_heat      <= 1'b0;
     r_cool      <= 1'b0;
     r_amb_hc    <= 1'b0;
-    #5000
+    repeat(p_clk_freq) @(posedge r_spi_clk);
     
     // Ambient cooling, hvac off
     read_temp;
-    #1000000  //Wait 1 sec
+    repeat(p_clk_freq) @(posedge r_spi_clk);  //Wait 1 sec
     read_temp;
-    #1000000 $stop;
+    repeat(p_clk_freq) @(posedge r_spi_clk);
+    $stop;
   end
 
   task read_temp;

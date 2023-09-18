@@ -11,6 +11,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
 entity thermometer_model is
+generic (
+  g_spi_clk_freq : integer := 10000
+);
 port (
     -- Normal TI TMP125 connections
     i_spi_clk   : in  std_logic;  -- 10MHz Max SPI clock, set to 10KHz
@@ -37,44 +40,65 @@ architecture thermometer_model of thermometer_model is
   constant c_dHVAC  : std_logic_vector(9 downto 0)  := 10x"2";
   -- Temperature conversion
   signal  s_air_temperature     : std_logic_vector(9 downto 0)  := 10x"54"; -- Default value of 21C (70F)
-  -- signal  s_air_temperature : std_logic_vector(9 downto 0)  := 10x"284"; -- test
+  signal  s_air_temp_clk_cntr   : integer range 0 to ((g_spi_clk_freq / 2) - 1) := 0;
   -- Latest Temperature conversion
   signal  s_temperature     : std_logic_vector(9 downto 0)  := 10x"0";
-  -- signal  s_temperature     : std_logic_vector(9 downto 0)  := 10x"284"; --test
+  signal  s_temp_clk_cntr   : integer range 0 to ((g_spi_clk_freq / 5) - 1) := 0;
   signal  s_spi_temperature : std_logic_vector(9 downto 0)  := 10x"0";
-  -- signal  s_spi_temperature : std_logic_vector(9 downto 0)  := 10x"284"; -- test
   signal  s_spi_so          : std_logic;
   signal  n_counter         : integer range 0 to 15;  -- tracks number of bits transfered
+  
 begin
   -- Emulate change in air temperature
   -- For testing purposes, temperature changes every 500ms
-  process is
-  begin    
-    wait for 500 ms;
-    if (i_amb_hc = '0') then
-      if (i_heat = '0' and i_cool = '1') then
-        s_air_temperature <= s_air_temperature - c_dHVAC - c_dAMB;
-      elsif(i_heat = '1' and i_cool = '0') then
-        s_air_temperature <= s_air_temperature + c_dHVAC - c_dAMB;
-      else
-        s_air_temperature <= s_air_temperature - c_dAMB;
-      end if;
-    else 
-      if (i_heat = '0' and i_cool = '1') then
-        s_air_temperature <= s_air_temperature - c_dHVAC + c_dAMB;
-      elsif(i_heat = '1' and i_cool = '0') then
-        s_air_temperature <= s_air_temperature + c_dHVAC + c_dAMB;
-      else 
-        s_air_temperature <= s_air_temperature + c_dAMB;
+  process(i_spi_clk) is
+  begin
+    if(rising_edge(i_spi_clk)) then
+      if(s_air_temp_clk_cntr = ((g_spi_clk_freq / 2) - 1)) then
+        if (i_amb_hc = '0') then
+          if (i_heat = '0' and i_cool = '1') then
+            s_air_temperature <= s_air_temperature - c_dHVAC - c_dAMB;
+          elsif(i_heat = '1' and i_cool = '0') then
+            s_air_temperature <= s_air_temperature + c_dHVAC - c_dAMB;
+          else
+            s_air_temperature <= s_air_temperature - c_dAMB;
+          end if;
+        else 
+          if (i_heat = '0' and i_cool = '1') then
+            s_air_temperature <= s_air_temperature - c_dHVAC + c_dAMB;
+          elsif(i_heat = '1' and i_cool = '0') then
+            s_air_temperature <= s_air_temperature + c_dHVAC + c_dAMB;
+          else 
+            s_air_temperature <= s_air_temperature + c_dAMB;
+          end if;
+        end if;
       end if;
     end if;
   end process;
-
-  -- SPI temperature update, occurs every 120 ms
-  process is
+  -- s_air_temp_clk_cntr control
+  process(i_spi_clk) is
   begin
-    wait for 120 ms;
-    s_temperature <= s_air_temperature;
+    if(rising_edge(i_spi_clk)) then
+      s_air_temp_clk_cntr <= 0 when (s_air_temp_clk_cntr = ((g_spi_clk_freq / 2) - 1)) else s_air_temp_clk_cntr + 1;
+    end if;
+  end process;
+
+  -- SPI temperature update, occurs every 120 ms on actual chip
+  -- For testing purposes, assume update occurs every 200ms
+  process(i_spi_clk) is
+  begin
+    if(rising_edge(i_spi_clk)) then
+      if(s_temp_clk_cntr = ((g_spi_clk_freq / 5) - 1)) then
+        s_temperature <= s_air_temperature;
+      end if;
+    end if;
+  end process;
+  -- s_temp_clk_cntr control
+  process(i_spi_clk) is
+  begin
+    if(rising_edge(i_spi_clk)) then
+      s_temp_clk_cntr <= 0 when (s_temp_clk_cntr = ((g_spi_clk_freq / 5) - 1)) else s_temp_clk_cntr + 1;
+    end if;
   end process;
 
   -- n_counter increment
