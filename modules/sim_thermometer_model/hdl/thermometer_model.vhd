@@ -3,7 +3,7 @@
 -- Date:
 
 -- Emulates a TI TMP125 SPI thermometer in continuous conversion mode
--- Only emulates positive degrees celsius
+-- Functionality testing limted to positive degrees celsius
 -- Only needed for simulation, does not need to be synthesizable
 
 library ieee;
