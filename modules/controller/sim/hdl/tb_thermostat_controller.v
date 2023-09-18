@@ -40,7 +40,6 @@ module testbench;
   // Thermometer Model signals
   reg       r_amb_hc;
 
-  // SPI Signals
   // -------------------------------------------
   // --         MODULE INSTANTIATIONS         --
   // -------------------------------------------
