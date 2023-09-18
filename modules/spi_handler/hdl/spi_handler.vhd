@@ -155,19 +155,7 @@ begin
       s_program_data <= s_flash_data when s_handler_nstate = PROG_DATA_READY else (others => (others => '0'));
     end if;
   end process;
-  -- process(i_reset_n, i_clk) is
-  -- begin
-  --   if(i_reset_n = '0') then
-  --     s_program_data  <= (others => (others => '0'));
-  --   else
-  --     if(rising_edge(i_clk)) then
-  --       s_program_data <= s_flash_data when s_handler_nstate = PROG_DATA_READY else (others => (others => '0'));
-  --       -- if(s_handler_nstate = PROG_DATA_READY) then
-  --       --   s_program_data <= s_flash_data;
-  --       -- end if;
-  --     end if;
-  --   end if;
-  -- end process;
+  
   -- Convert s_program_data (t_array_slv8) to o_program_data (t_array_slv64).
   gen_program_data : for i in 0 to 2111 generate
     o_program_data(i/8)((((i mod 8)*8)+7) downto ((i mod 8)*8)) <= s_program_data(i);
@@ -195,16 +183,6 @@ begin
       s_program_ready <= '1' when s_handler_nstate = PROG_DATA_READY else '0';
     end if;
   end process;
-  -- process(i_reset_n, i_clk) is
-  -- begin
-  --   if(i_reset_n = '0') then
-  --     s_program_ready <= '0';
-  --   else
-  --     if(rising_edge(i_clk)) then
-  --       s_program_ready <= '1' when s_handler_nstate = PROG_DATA_READY else '0';
-  --     end if;
-  --   end if;
-  -- end process;
   o_program_ready <= s_program_ready;
 
   --------------------------------------------
