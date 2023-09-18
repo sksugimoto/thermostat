@@ -97,7 +97,7 @@ begin
   -- HVAC Control wire assignments
   -- Fan should be on when force fan enabled
   o_green_fan <= '1' when ((i_sys_on_n = '0') and (i_force_fan_n = '0')) else s_force_fan;
-  -- User Interface Handler
+  
 
   -- Controller
   controller : entity work.thermostat_controller
@@ -171,6 +171,7 @@ begin
   o_spi_cs_n  <= s_spi_cs_n when i_reprogram_n = '1' else (others => 'Z');
   o_spi_si    <= s_spi_si when i_reprogram_n = '1' else 'Z';
 
+  -- SPI Temperature data to ufixed type with unit conversion.
   spi_to_temp : entity work.spi_to_temp
   port map (
     -- Control signals
@@ -180,6 +181,7 @@ begin
     o_temp_data => s_temperature
   );
 
+  -- Manual Mode and Override Mode Control
   user_control : entity work.usr_ctrl_ovride
   generic map (
     -- # of clock cycles elapsed after last user input before o_stc is updated
