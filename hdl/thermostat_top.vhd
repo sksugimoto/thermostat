@@ -10,6 +10,7 @@ use ieee.fixed_pkg.all;
 library work;
 use work.global_package.all;
 use work.stc_package.all;
+use work.time_package.all;
 
 entity thermostat_top is 
 generic (
@@ -69,10 +70,7 @@ architecture thermostat_top of thermostat_top is
   signal s_man_stc        : t_stc;
 
   -- Time Keper Signals
-  signal s_time_day       : std_logic_vector(6 downto 0); -- One-hot reference to day
-  signal s_time_hour      : std_logic_vector(4 downto 0);
-  signal s_time_minute    : std_logic_vector(5 downto 0);
-  signal s_time_second    : std_logic_vector(5 downto 0);
+  signal s_day_time       : t_day_time;
 
   -- SPI handler signals
   signal s_read_program   : std_logic;
@@ -171,7 +169,7 @@ begin
   o_spi_cs_n  <= s_spi_cs_n when i_reprogram_n = '1' else (others => 'Z');
   o_spi_si    <= s_spi_si when i_reprogram_n = '1' else 'Z';
 
-  -- SPI Temperature data to ufixed type with unit conversion.
+  -- SPI Temperature data to ufixed type with unit conversion
   spi_to_temp : entity work.spi_to_temp
   port map (
     -- Control signals
@@ -228,10 +226,7 @@ begin
     i_incr_hr_n   => i_incr_hr_n,
     i_incr_min_n  => i_incr_min_n,
     -- Time
-    o_day         => s_time_day,
-    o_hour        => s_time_hour,
-    o_minute      => s_time_minute,
-    o_second      => s_time_second
+    o_day_time    => s_day_time
   );
 
   -- 14 Segment Displays Controller
