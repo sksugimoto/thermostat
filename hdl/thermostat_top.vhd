@@ -130,7 +130,7 @@ begin
     i_reset_n         => i_reset_n,       -- : in  std_logic;
     i_sys_pwr_n       => i_sys_on_n,      -- : in  std_logic;
     i_reprogram_n     => i_reprogram_n,   -- : in  std_logic;
-    i_time_second     => s_time_second,   -- : in  std_logic_vector(5 downto 0);
+    i_time_second     => s_day_time.second,   -- : in  std_logic_vector(5 downto 0);
     -- Program data signals
     o_program_req     => s_read_program,  -- : out std_logic;
     i_program_rdy     => s_program_ready, -- : in  std_logic;
