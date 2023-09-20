@@ -8,8 +8,8 @@
 
 module testbench;
   // Parameters
-  parameter p_clk_freq = 5;
-  parameter p_btn_init = 5;
+  parameter p_clk_freq = 4;
+  parameter p_btn_init = 4;
   parameter p_btn_hold = 1;
 
   // Time Keeper signals
@@ -24,7 +24,7 @@ module testbench;
   wire[5:0] w_minute;
   wire[5:0] w_second;
 
-  time_keeper # (
+  wrapper_time_keeper # (
     // Set to different value for simulation
     .g_clk_freq(p_clk_freq),  // : integer := 20000;
     .g_btn_init(p_btn_init),  // : integer := 20000;
@@ -78,6 +78,7 @@ module testbench;
     r_incr_hr_n <= 1'b1;
     wait(w_minute == 6'h25);  // 37 minutes (Saturday, 4:37PM)
     r_incr_min_n  <= 1'b1;
+    repeat(p_clk_freq*5) @(posedge r_clk);
     r_set_time_n  <= 1'b1;
     wait(w_day == 7'b1);
     wait(w_hour == 5'h11);

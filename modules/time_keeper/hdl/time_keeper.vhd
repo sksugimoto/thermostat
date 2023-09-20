@@ -9,6 +9,9 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
+library work;
+use work.time_package.all;
+
 entity time_keeper is
 generic (
   -- Set to different value for simulation
@@ -28,10 +31,7 @@ port (
   i_incr_min_n  : in  std_logic;  -- Active Low
 
   -- Time
-  o_day         : out std_logic_vector(6 downto 0); -- One-hot reference to day
-  o_hour        : out std_logic_vector(4 downto 0);
-  o_minute      : out std_logic_vector(5 downto 0);
-  o_second      : out std_logic_vector(5 downto 0)
+  o_day_time    : out t_day_time
 );
 end entity time_keeper;
 
@@ -293,18 +293,11 @@ begin
   end process;
 
   -- Output control
-  -- o_day control
   gen_day : for i in 0 to 6 generate
-    o_day(i) <= '1' when i = n_day else '0';
+    o_day_time.day(i) <= '1' when i= n_day else '0';
   end generate;
-  
-  -- o_hour control
-  o_hour <= std_logic_vector(to_unsigned(n_hour, o_hour'length));
-
-  -- o_minute control
-  o_minute <= std_logic_vector(to_unsigned(n_minute, o_minute'length));
-
-  -- o_second control
-  o_second <= std_logic_vector(to_unsigned(n_second, o_second'length));
+  o_day_time.hour <= n_hour;
+  o_day_time.minute <= n_minute;
+  o_day_time.second <= n_second;
 
 end architecture;
