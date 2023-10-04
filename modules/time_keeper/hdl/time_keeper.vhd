@@ -296,8 +296,9 @@ begin
   gen_day : for i in 0 to 6 generate
     o_day_time.day(i) <= '1' when i= n_day else '0';
   end generate;
-  o_day_time.hour <= n_hour;
-  o_day_time.minute <= n_minute;
-  o_day_time.second <= n_second;
+  o_day_time.hour     <= n_hour;
+  o_day_time.minute   <= n_minute;
+  o_day_time.second   <= n_second;
+  o_day_time.fsecond  <= n_clk_counter;
 
 end architecture;
