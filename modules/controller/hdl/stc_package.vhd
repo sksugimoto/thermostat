@@ -43,6 +43,14 @@ package stc_package is
     i_f_offset : in integer
   ) return integer;
 
+  function stc_offset_f_to_tempf (
+    i_f_offset : in integer
+  ) return ufixed;
+
+  function stc_offset_c_to_tempc (
+    i_c_offset : in integer
+  ) return ufixed;
+
   constant c_stc_idle : t_stc := (
     heat_on     => '0',
     cool_on     => '0',
@@ -110,6 +118,25 @@ package body stc_package is
   begin
     v_c_offset := to_integer((to_ufixed(i_f_offset, 5, 0) * c_c_mult) * to_ufixed(2, 1, 0));
     return v_c_offset;
+  end;
+
+  -- Converts stc offset to actual temperature
+  function stc_offset_f_to_tempf (
+    i_f_offset : in integer
+  )return ufixed is
+    variable v_f_temp : ufixed(6 downto -1);
+  begin
+    v_f_temp := to_ufixed(i_f_offset + 50, 6, -1);
+    return v_f_temp;
+  end;
+
+  function stc_offset_c_to_tempc (
+    i_c_offset : in integer
+  ) return ufixed is
+    variable v_c_temp : ufixed(6 downto -1);
+  begin
+    v_c_temp := resize(to_ufixed(i_c_offset, 5, 0) * to_ufixed(0.5, 0, -1) + to_ufixed(10, 3, 0), 6, -1);
+    return v_c_temp;
   end;
 
 end package body stc_package;
