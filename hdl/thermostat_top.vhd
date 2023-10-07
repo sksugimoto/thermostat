@@ -30,8 +30,9 @@ port (
   i_run_prog_n  : in  std_logic;                    -- Physical Switch (2 position), active low
   i_force_fan_n : in  std_logic;                    -- Physical Switch (2 position), active low
   i_heat_cool_n : in  std_logic_vector(2 downto 0); -- Physical switch (3 position, heat, cool, auto), one-hot active low
-  i_reprogram_n : in  std_logic;                    -- Switch, "disconnects" FPGA from SPI to allow for external control, active low
+  i_reprogram_n : in  std_logic;                    -- Switch, "disconnects" FPGA from SPI to allow for external SPI control, active low
   i_set_time_n  : in  std_logic;                    -- Physical Switch (2 position), active low
+  i_incr_week_n : in  std_logic;                    -- Push button, active low
   i_incr_day_n  : in  std_logic;                    -- Push button, active low
   i_incr_hr_n   : in  std_logic;                    -- Push button, active low
   i_incr_min_n  : in  std_logic;                    -- Push button, active low
@@ -49,7 +50,9 @@ port (
   o_14seg_temp_7  : out std_logic_vector(14 downto 0);
 
   -- LEDs
-  o_prgm_ovride_n : out std_logic;  -- Pull low when temporary program override is engaged
+  o_prgm_error    : out std_logic;  -- Pulled low when schedule's referenecs point to no-valid entries.
+  o_prgm_ovride_n : out std_logic;  -- Pulled low when temporary program override is engaged
+  
   -- SPI Signals
   o_spi_clk     : out std_logic;  -- 10KHz
   o_spi_cs_n    : out std_logic_vector(1 downto 0);
@@ -125,6 +128,27 @@ begin
   );
 
   -- Scheduler
+  scheduler : entity work.scheduler_control
+  generic (
+    g_clk_freq => g_time_clk_freq
+  )
+  port map (
+    -- Clock and Reset
+    i_clk           => i_clk_20KHz,   -- : in  std_logic;
+    i_reset_n       => i_reset_n,     -- : in  std_logic;
+    -- Scheduler Controller
+    i_sys_pwr_n     => i_sys_on_n,  -- : in  std_logic;
+    i_run_prog_n    => i_run_prog_n,  -- : in  std_logic;
+    i_reprogram_n   => i_reprogram_n,  -- : in  std_logic;
+    i_set_time_n    => i_set_time_n,  -- : in  std_logic;
+    i_incr_week_n   => i_incr_week_n,  -- : in  std_logic;
+    i_slv_prog      => s_program_data,  -- : in  t_array_slv64(263 downto 0);
+    i_day_time      => s_day_time,   -- : in  t_day_time;
+
+    -- STC to Controller
+    o_program_error => o_prgm_error,-- : out std_logic;
+    o_program_stc   => s_prog_stc     -- : out t_stc
+  );
 
   -- SPI Data Handler
   spi_data_handler : entity work.spi_data_handler
