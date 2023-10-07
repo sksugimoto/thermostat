@@ -37,11 +37,6 @@ port (
   i_incr_min_n  : in  std_logic;                    -- Push button, active low
   i_temp_up_n   : in  std_logic;                    -- Push button, active low
   i_temp_down_n : in  std_logic;                    -- Push button, active low
-
-  -- 3-Wire Thermostat Control (4-wire with 24V power source)
-  o_green_fan   : out std_logic;  -- Active high
-  o_yellow_ac   : out std_logic;  -- Active high
-  o_white_heat  : out std_logic;  -- Active high
   
   -- 14 Segement display out
   o_14seg_temp_0  : out std_logic_vector(14 downto 0);
@@ -52,11 +47,19 @@ port (
   o_14seg_temp_5  : out std_logic_vector(14 downto 0);
   o_14seg_temp_6  : out std_logic_vector(14 downto 0);
   o_14seg_temp_7  : out std_logic_vector(14 downto 0);
+
+  -- LEDs
+  o_prgm_ovride_n : out std_logic;  -- Pull low when temporary program override is engaged
   -- SPI Signals
   o_spi_clk     : out std_logic;  -- 10KHz
   o_spi_cs_n    : out std_logic_vector(1 downto 0);
   o_spi_si      : out std_logic;
-  i_spi_so      : in  std_logic
+  i_spi_so      : in  std_logic;
+
+  -- 3-Wire Thermostat Control (4-wire with 24V power source)
+  o_green_fan   : out std_logic;  -- Active high
+  o_yellow_ac   : out std_logic;  -- Active high
+  o_white_heat  : out std_logic   -- Active high
 );
 end entity thermostat_top;
 
@@ -89,7 +92,7 @@ architecture thermostat_top of thermostat_top is
   signal s_temperature    : ufixed(6 downto -2);
 
   -- 14 Segment signals
-  signal s_14seg_ctrls    : t_array_slv16(7 downto 0);
+  signal s_14seg_ctrls    : t_array_slv16(15 downto 0);
 
 begin
   -- HVAC Control wire assignments
@@ -232,6 +235,7 @@ begin
   -- 14 Segment Displays Controller
   display_controller : entity work.display_controller
   port map (
+    i_day_time      => s_day_time,
     i_temperature   => s_temperature,
     i_sys_on_n      => i_sys_on_n,  -- Sets programmed temperature display to "OFF" when high
     i_prog_temp     => ,
