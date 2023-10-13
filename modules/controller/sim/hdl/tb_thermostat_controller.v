@@ -88,7 +88,8 @@ module testbench;
 
   // Thermoter Module
   thermometer_model # (
-    .g_spi_clk_freq(p_clk_freq/2)
+    .g_spi_clk_freq(p_clk_freq/2),
+    .g_temp_chg_sec(1)
   ) therm0 (
     .i_spi_clk(w_spi_clk),
     .i_spi_cs_n(w_spi_cs_n[0]),
