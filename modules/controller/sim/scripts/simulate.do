@@ -26,6 +26,9 @@ add wave -expand -group "UUT" -radix unsigned sim:/testbench/UUT/controller/s_ta
 add wave -expand -group "UUT" -radix binary   {sim:/testbench/UUT/controller/s_target_temp[-1]}
 add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/i_prog_stc
 add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/i_man_stc
+add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/s_man_stc_active
+add wave -expand -group "UUT"                 sim:/testbench/UUT/controller/s_man_stc_settled
+add wave -expand -group "UUT" -radix unsigned sim:/testbench/UUT/controller/n_man_stc_stl_cntr
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_mode
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_auto_range
 add wave -expand -group "UUT" -radix binary   sim:/testbench/UUT/controller/s_buffer

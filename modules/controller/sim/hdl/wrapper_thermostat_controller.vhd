@@ -15,7 +15,8 @@ use work.stc_package.all;
 entity wrapper_thermostat_controller is
 generic (
   -- As wrapper is only used for testbench, set delay time to testbench settings
-  g_sc_delay_time : integer := 40000
+  g_sc_delay_time : integer := 40000;
+  g_man_stc_itime : integer := 100000
 );
 port (
   -- Clock and Reset
@@ -44,7 +45,8 @@ architecture wrapper_thermostat_controller of wrapper_thermostat_controller is
 begin
   controller : entity work.thermostat_controller
   generic map (
-    g_sc_delay_time => g_sc_delay_time
+    g_sc_delay_time => g_sc_delay_time,
+    g_man_stc_itime => g_man_stc_itime
   )
   port map (
     -- Clock and Reset

@@ -8,6 +8,7 @@
 
 module testbench;
   // Parameters
+  parameter       p_clk_freq  = 20;
   parameter[31:0] p_stc_heat  = 32'h41F1C;  // Heat on @ 78F (25.5C)
   parameter[31:0] p_stc_cool  = 32'h21412;  // Cool on @ 68F (20.0C)
   parameter[31:0] p_stc_auto  = 32'h61816;  // Auto on @ 72F (22.0C)
@@ -44,9 +45,9 @@ module testbench;
   // --         MODULE INSTANTIATIONS         --
   // -------------------------------------------
   wrapper_thermostat_controller # (
-    .g_sc_delay_time(40000) // 2 seconds
-  )
-  UUT (
+    .g_sc_delay_time(p_clk_freq*10),  // 10 seconds
+    .g_man_stc_itime(p_clk_freq*5)    // 5 seconds
+  ) UUT (
     // Clock and Reset
     .i_clk(r_clk),
     .i_reset_n(r_reset_n),
@@ -86,7 +87,9 @@ module testbench;
   );
 
   // Thermoter Module
-  thermometer_model therm0 (
+  thermometer_model # (
+    .g_spi_clk_freq(p_clk_freq/2)
+  ) therm0 (
     .i_spi_clk(w_spi_clk),
     .i_spi_cs_n(w_spi_cs_n[0]),
     .i_spi_si(w_spi_si),
@@ -116,7 +119,7 @@ module testbench;
   // Get temperature ever 0.5 second
   initial n_clk_counter <= 0;
   always begin
-    @(posedge r_clk) n_clk_counter <= n_clk_counter == 9999 ? 0 : n_clk_counter + 1;
+    @(posedge r_clk) n_clk_counter <= n_clk_counter == ((p_clk_freq/2)-1) ? 0 : n_clk_counter + 1;
   end
 
   initial begin
@@ -124,7 +127,7 @@ module testbench;
     r_temperature_c <= 9'h0;
   end
   always begin
-    wait(n_clk_counter == 9999) r_read_therm <= 1'b1;
+    wait(n_clk_counter == ((p_clk_freq/2)-1)) r_read_therm <= 1'b1;
     wait(w_therm_ready == 1'b1);
     @(posedge r_clk) r_temperature_c <= w_spi_temperature;
     r_read_therm <= 1'b0;
@@ -143,7 +146,7 @@ module testbench;
     r_amb_hc    <= 1'b0;  // Temperature falling nautrally
     
     // Wait 1 second for first temperatrue to load
-    #1000000
+    repeat(p_clk_freq) @(posedge r_clk);
     // Switch System on
     r_sys_pwn_n <= 1'b0;
     // Set STCs
@@ -154,7 +157,7 @@ module testbench;
     $display("Testing System off...");
     r_sys_pwn_n <= 1'b1;
 
-    repeat(500000) @(posedge r_clk);
+    repeat(p_clk_freq*20) @(posedge r_clk);
     $stop;
   end
 

@@ -16,10 +16,12 @@ use work.stc_package.all;
 entity thermostat_controller is
 generic (
   -- Short cycle delay, prevents system from re-engaging too quickly.
-  -- Set to 2 seconds for testing (20,000*2 = 40,000 cycles).
   -- Set to 10 minutes for deployment (20,000*60*10 = 12,000,000 cycles).
   -- Short cycle timer will not propagate between system resets or power cycle.
-  g_sc_delay_time : integer := 12000000
+  g_sc_delay_time : integer := 12000000;
+  -- # of clock cycles elapsed after last user input before i_man_stc update is applied
+  -- Set to 5 seconds for deployment (20,000*5 = 100,000 cycles).
+  g_man_stc_itime : integer := 100000
 );
 port (
   -- Clock and Reset
@@ -78,6 +80,10 @@ architecture thermostat_controller of thermostat_controller is
   signal s_heat_on          : std_logic;
   signal s_cool_off         : std_logic;
   signal s_heat_off         : std_logic;
+  signal s_man_stc_active   : t_stc;
+  signal s_man_stc_d1       : t_stc;
+  signal s_man_stc_settled  : std_logic := '0';
+  signal n_man_stc_stl_cntr : integer range 0 to (g_man_stc_itime - 1) := 0;
   
   type t_thermostat_state is(
     IDLE,
@@ -90,6 +96,77 @@ architecture thermostat_controller of thermostat_controller is
 
 begin
   --------------------------------------------
+  --           MANUAL STC UPDATER           --
+  --------------------------------------------
+  -- s_man_stc_d1 control
+  process(i_reset_n, i_clk) is
+  begin
+    if(i_reset_n = '0') then
+      s_man_stc_d1 <= c_stc_idle;
+    else
+      if(rising_edge(i_clk)) then
+        s_man_stc_d1 <= i_man_stc;
+      end if;
+    end if;
+  end process;
+
+  -- n_man_stc_stl_cntr control
+  process(i_reset_n, i_clk) is
+  begin
+    if(i_reset_n = '0') then
+      n_man_stc_stl_cntr <= 0;
+    else
+      if(rising_edge(i_clk)) then
+        if( (s_man_stc_d1.heat_on = i_man_stc.heat_on) and
+            (s_man_stc_d1.cool_on = i_man_stc.cool_on) and
+            (s_man_stc_d1.trgt_c_ofst = i_man_stc.trgt_c_ofst) and
+            (s_man_stc_d1.trgt_f_ofst = i_man_stc.trgt_f_ofst) and
+            (s_man_stc_settled = '0')) then
+          n_man_stc_stl_cntr <= 0 when n_man_stc_stl_cntr = (g_man_stc_itime - 1) else n_man_stc_stl_cntr + 1;
+        else
+          n_man_stc_stl_cntr <= 0;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  -- s_man_stc_settled control
+  process(i_reset_n, i_clk) is
+  begin
+    if(i_reset_n = '0') then
+      s_man_stc_settled <= '0';
+    else
+      if(rising_edge(i_clk)) then
+        if( (s_man_stc_d1.heat_on /= i_man_stc.heat_on) or
+            (s_man_stc_d1.cool_on /= i_man_stc.cool_on) or
+            (s_man_stc_d1.trgt_c_ofst /= i_man_stc.trgt_c_ofst) or
+            (s_man_stc_d1.trgt_f_ofst /= i_man_stc.trgt_f_ofst)) then
+          s_man_stc_settled <= '0';
+        else
+          if(s_man_stc_settled = '1') then
+            s_man_stc_settled <= '1';
+          else
+            s_man_stc_settled <= '1' when (n_man_stc_stl_cntr = (g_man_stc_itime - 1)) else '0';
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  -- s_man_stc_active control
+  process(i_reset_n, s_man_stc_settled) is
+  begin
+    if(i_reset_n = '0') then
+      s_man_stc_active <= c_stc_idle;
+    else
+      if(rising_edge(s_man_stc_settled)) then
+        s_man_stc_active <= s_man_stc_d1;
+      end if;
+    end if;
+  end process;
+
+
+  --------------------------------------------
   --        STC-TO-TARGET TEMPERATURE       --
   --------------------------------------------
   -- s_target_temp control ((6 downto 0) is 7 wide, (6 downto -1) is 8 wide)
@@ -99,29 +176,24 @@ begin
       s_target_temp <= resize(i_temperature, s_target_temp'high, s_target_temp'low);
     else
       if(rising_edge(i_clk)) then
-        if(i_man_stc.heat_on = '0' and i_man_stc.cool_on = '0' and i_prog_stc.heat_on = '0' and i_prog_stc.cool_on = '0') then -- System idle
+        if(s_man_stc_active.heat_on = '0' and s_man_stc_active.cool_on = '0' and i_prog_stc.heat_on = '0' and i_prog_stc.cool_on = '0') then -- System idle
           s_target_temp <= resize(i_temperature, s_target_temp'high, s_target_temp'low);
         else  -- System active
-          if(i_man_stc.heat_on = '1' or i_man_stc.cool_on = '1') then  -- run manual or override
+          if(s_man_stc_active.heat_on = '1' or s_man_stc_active.cool_on = '1') then  -- run manual or override
             if(i_use_f = '1') then
               -- When in Fahrenheit mode, target temperature has a range of 50F-99F
-              if(i_man_stc.trgt_f_ofst > 49) then
+              if(s_man_stc_active.trgt_f_ofst > 49) then
                 s_target_temp <= 7x"63" & '0';
               else
-                -- to_ufixed(unsigned(i_man_stc.trgt_f_ofst, 6), 5, 0) is ufixed(5 downto 0)
-                -- c_f_lbound is ufixed(3 downto 0), therefore sum is max(5, 3) + 1 downto min(0, 0) => ufixed(6 downto 0)
-                s_target_temp <= resize((c_f_lbound + to_ufixed(i_man_stc.trgt_f_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
+                s_target_temp <= resize((c_f_lbound + to_ufixed(s_man_stc_active.trgt_f_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
               end if;
             else
               -- When in Celsius mode, target temperature has a range of 10C-37.5C
               -- stc Celsius offset is in 0.5C increments
-              if(i_man_stc.trgt_c_ofst > 55) then
+              if(s_man_stc_active.trgt_c_ofst > 55) then
                 s_target_temp <=7x"25" & '1';
               else
-                -- to_ufixed(unsigned(i_man_stc.trgt_c_ofst, 6), 5, 0) is ufixed(5 downto 0)
-                -- c_c_step is ufixed(0 downto -1), therefore, product is 5+0+1 downto 0 + -1 => 6 downto -1
-                -- c_c_lbound is ufixed(3 downto 0), therefore sum is max(3, 6) + 1 downto min(-1, 0) => ufixed(7 downto -1)
-                s_target_temp <= resize((c_c_lbound + c_c_step * to_ufixed(i_man_stc.trgt_c_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
+                s_target_temp <= resize((c_c_lbound + c_c_step * to_ufixed(s_man_stc_active.trgt_c_ofst, 5, 0)), s_target_temp'high, s_target_temp'low);
               end if;
             end if;
           else  -- Run program
@@ -153,10 +225,10 @@ begin
       s_mode  <= c_idle_mode;
     else
       if(rising_edge(i_clk)) then
-        if((i_man_stc.cool_on = '1') or (i_man_stc.heat_on = '1')) then
-          if((i_man_stc.cool_on = '1') and (i_man_stc.heat_on) = '1') then
+        if((s_man_stc_active.cool_on = '1') or (s_man_stc_active.heat_on = '1')) then
+          if((s_man_stc_active.cool_on = '1') and (s_man_stc_active.heat_on) = '1') then
             s_mode <= c_auto_mode;
-          elsif(i_man_stc.cool_on = '1') then
+          elsif(s_man_stc_active.cool_on = '1') then
             s_mode <= c_cool_mode;
           else
             s_mode <= c_heat_mode;
