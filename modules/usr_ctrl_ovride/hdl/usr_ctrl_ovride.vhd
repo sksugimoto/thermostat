@@ -259,84 +259,13 @@ begin
     end if;
   end process;
 
-  -- s_stc_d1 control
-  process(i_reset_n, i_clk) is
-  begin
-    if(i_reset_n = '0') then
-      s_stc_d1 <= c_stc_idle;
-    else
-      if(rising_edge(i_clk)) then
-        s_stc_d1 <= s_stc;
-      end if;
-    end if;
-  end process;
-
-  -- n_stc_settle_cntr control
-  process(i_reset_n, i_clk) is
-  begin
-    if(i_reset_n = '0') then
-      n_stc_settle_cntr <= 0;
-    else
-      if(rising_edge(i_clk)) then
-        if((i_t_down_n = '1') and (i_t_up_n = '1')) then
-          if( (s_stc_d1.heat_on = s_stc.heat_on) and 
-              (s_stc_d1.cool_on = s_stc.cool_on) and 
-              (s_stc_d1.trgt_c_ofst = s_stc.trgt_c_ofst) and 
-              (s_stc_d1.trgt_f_ofst = s_stc.trgt_f_ofst) and 
-              (s_stc_settled = '0')) then
-            n_stc_settle_cntr <= 0 when n_stc_settle_cntr = (g_ui_idle_time - 1) else n_stc_settle_cntr + 1;
-          else
-            n_stc_settle_cntr <= 0;
-          end if;
-        else
-          n_stc_settle_cntr <= 0;
-        end if;
-      end if;
-    end if;
-  end process;
-
-  -- s_stc_settled control
-  process(i_reset_n, i_clk) is
-  begin
-    if(i_reset_n = '0') then
-      s_stc_settled <= '0';
-    else
-      if(rising_edge(i_clk)) then
-        if((i_t_down_n = '1') and (i_t_up_n = '1')) then
-          if( (s_stc_d1.heat_on /= s_stc.heat_on) or
-              (s_stc_d1.cool_on /= s_stc.cool_on) or
-              (s_stc_d1.trgt_c_ofst /= s_stc.trgt_c_ofst) or
-              (s_stc_d1.trgt_f_ofst /= s_stc.trgt_f_ofst)) then
-            s_stc_settled <= '0';
-          else
-            if(s_stc_settled = '1') then
-              s_stc_settled <= '1';
-            else
-              s_stc_settled <= '1' when n_stc_settle_cntr = (g_ui_idle_time - 1) else '0';
-            end if;
-          end if;
-        else
-          s_stc_settled <= '0';
-        end if;
-      end if;
-    end if;
-  end process;
-  
-  process(i_reset_n, i_sys_pwr_n, s_manual_nstate, s_stc_settled) is
+  -- o_stc_control
+  process(i_reset_n, s_manual_nstate) is
   begin
     if(i_reset_n = '0') then
       o_stc <= c_stc_idle;
     else
-      if(s_manual_nstate = IDLE) then
-        o_stc <= c_stc_idle;
-      else
-        o_stc <= s_stc when s_stc_settled = '1' else o_stc;
-      end if;
-      -- if(i_sys_pwr_n = '0') then
-      --   o_stc <= s_stc when s_stc_settled = '1' else o_stc;
-      -- else
-      --   o_stc <= c_stc_idle;
-      -- end if;
+      o_stc <= c_stc_idle when s_manual_nstate = IDLE else s_stc;
     end if;
   end process;
 
