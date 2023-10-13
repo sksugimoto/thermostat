@@ -260,7 +260,7 @@ begin
   end process;
 
   -- o_stc_control
-  process(i_reset_n, s_manual_nstate) is
+  process(i_reset_n, s_manual_nstate, s_stc) is
   begin
     if(i_reset_n = '0') then
       o_stc <= c_stc_idle;
