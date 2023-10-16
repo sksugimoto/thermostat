@@ -103,7 +103,9 @@ module testbench;
   );
 
   // Thermoter Module
-  thermometer_model therm_0 (
+  thermometer_model # (
+    .g_temp_chg_sec(60)
+  ) therm_0 (
     .i_spi_clk(w_spi_clk),
     .i_spi_cs_n(w_spi_cs_n[0]),
     .i_spi_si(w_spi_si),
@@ -113,7 +115,7 @@ module testbench;
     .i_amb_hc(r_amb_hc)
   );
 
-  time_keeper # (
+  wrapper_time_keeper # (
     // Set to different value for simulation
     .g_clk_freq(p_clk_freq),  // : integer := 20000;
     .g_btn_init(p_btn_init),  // : integer := 20000;

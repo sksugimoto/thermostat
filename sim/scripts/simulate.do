@@ -1,5 +1,6 @@
 
 vsim -voptargs=+acc -t 1us work.testbench
+# log * -r
 
 # Add testbench signals
 add wave -expand -group "Testbench"                         -radix binary   sim:/testbench/r_clk

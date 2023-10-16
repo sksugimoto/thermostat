@@ -6,6 +6,8 @@ vcom -2008 ../../../spi_handler_thermometer/hdl/spi_handler_thermometer.vhd
 vcom -2008 ../../../spi_handler_flash/hdl/spi_handler_flash.vhd
 vcom -2008 ../../../spi_handler/hdl/spi_handler.vhd
 vcom -2008 ../../../spi_handler/sim/hdl/wrapper_spi_handler.vhd
+vcom -2008 ../../../time_keeper/hdl/time_package.vhd
 vcom -2008 ../../../time_keeper/hdl/time_keeper.vhd
+vcom -2008 ../../../time_keeper/sim/hdl/wrapper_time_keeper.vhd
 vcom -2008 ../../hdl/spi_data_handler.vhd
 vlog ../hdl/tb_spi_data_handler.v
