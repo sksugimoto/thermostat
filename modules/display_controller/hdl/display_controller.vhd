@@ -266,7 +266,7 @@ begin
                           ('0' & s_stemp_tens);
   
 
-  s_msg_stemp_ascii <= '1' when ((i_reprogram_n = '0') or (i_set_time_n = '0') or (i_prog_read = '1') or (i_sys_on_n = '1')) else '0';
+  s_msg_stemp_ascii <= '1' when ((i_reprogram_n = '0') or (i_set_time_n = '0') or (i_prog_read = '1') or (i_sys_on_n = '1') or (s_stc_active.heat_on = '0' and s_stc_active.cool_on = '0')) else '0';
                         
   seg_14_8 : entity work.hex_ascii_to_14seg
   port map (
