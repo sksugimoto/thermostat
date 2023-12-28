@@ -147,12 +147,19 @@ begin
   end process;
 
   -- s_program_data control
-  process(i_reset_n, s_handler_nstate, s_flash_data) is
+  process(i_reset_n, s_handler_nstate, s_handler_state, s_flash_data) is
   begin
     if(i_reset_n = '0') then
       s_program_data <= (others => (others => '0'));
     else
-      s_program_data <= s_flash_data when s_handler_nstate = PROG_DATA_READY else (others => (others => '0'));
+      if(s_handler_nstate = PROG_DATA_READY) then
+        if(s_handler_state = WAITING_PROG_DATA) then
+          s_program_data <= s_flash_data;
+        end if;
+      else
+        s_program_data <= (others => (others => '0'));
+      end if;
+      -- s_program_data <= s_flash_data when s_handler_nstate = PROG_DATA_READY else (others => (others => '0'));
     end if;
   end process;
   
@@ -199,12 +206,19 @@ begin
   end process;
 
   -- s_temperature control
-  process(i_reset_n, s_handler_nstate, s_therm_data) is
+  process(i_reset_n, s_handler_nstate, s_handler_nstate, s_therm_data) is
   begin
     if(i_reset_n = '0') then
       s_temperature <= (others => '0');
     else
-      s_temperature <= s_therm_data when s_handler_nstate = THERM_DATA_READY else (others => '0');
+      if(s_handler_nstate = THERM_DATA_READY) then
+        if(s_handler_state = WAITING_THERM_DATA) then
+          s_temperature <= s_therm_data;
+        end if;
+      else
+        s_temperature <= (others => '0');
+      end if;
+      -- s_temperature <= s_therm_data when s_handler_nstate = THERM_DATA_READY else (others => '0');
     end if;
   end process;
   o_temperature <= s_temperature(14 downto 5);
