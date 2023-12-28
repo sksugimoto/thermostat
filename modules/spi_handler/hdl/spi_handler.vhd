@@ -159,7 +159,6 @@ begin
       else
         s_program_data <= (others => (others => '0'));
       end if;
-      -- s_program_data <= s_flash_data when s_handler_nstate = PROG_DATA_READY else (others => (others => '0'));
     end if;
   end process;
   
@@ -218,7 +217,6 @@ begin
       else
         s_temperature <= (others => '0');
       end if;
-      -- s_temperature <= s_therm_data when s_handler_nstate = THERM_DATA_READY else (others => '0');
     end if;
   end process;
   o_temperature <= s_temperature(14 downto 5);
