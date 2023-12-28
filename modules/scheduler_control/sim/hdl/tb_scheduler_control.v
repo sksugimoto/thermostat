@@ -147,11 +147,11 @@ module testbench;
     // Populate program instance register
     for(i = 0; i < 63; i = i + 1) begin
       if(i == 1) begin
-        // 5AM-7AM, heat to 68F
+        // 5AM-8AM, heat to 68F
         r_prog_instance[i] <= 128'h8008_1412_0000_0000_0000_0000_FFF0_0000;
       end
       else if (i == 7) begin
-        // 5:30PM-10PM, cool to 74F
+        // 5:30PM-11PM, cool to 74F
         r_prog_instance[i] <= 128'h8004_1B18_0FFF_FFC0_0000_0000_0000_0000;
       end
       else if (i == 19) begin
